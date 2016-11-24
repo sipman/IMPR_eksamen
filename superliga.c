@@ -9,12 +9,12 @@ typedef struct {
   int minutes;
 } time;
 typedef struct {
-  char round[3];
-  char weekDay[3];
+  char round[4];
+  char weekDay[4];
   date date;
   time time;
-  char homeTeam[3];
-  char awayTeam[3];
+  char homeTeam[4];
+  char awayTeam[4];
   int homeGoals;
   int awayGoals;
   int attendances;
@@ -26,18 +26,18 @@ int main(void){
                         {"R1", "Lor", {18,7,2015}, {17,30}, "FCK", "BIF", 7, 0, 43211}
                       };
   printf("%s %s %d/%d/%d %d:%d %s - %s %d-%d %d\n",
-        matches[1].round,
-        matches[1].weekDay,
-        matches[1].date.day,
-        matches[1].date.month,
-        matches[1].date.year,
-        matches[1].time.hours,
-        matches[1].time.minutes,
-        matches[1].homeTeam,
-        matches[1].awayTeam,
-        matches[1].homeGoals,
-        matches[1].awayGoals,
-        matches[1].attendances
+        matches[0].round,
+        matches[0].weekDay,
+        matches[0].date.day,
+        matches[0].date.month,
+        matches[0].date.year,
+        matches[0].time.hours,
+        matches[0].time.minutes,
+        matches[0].homeTeam,
+        matches[0].awayTeam,
+        matches[0].homeGoals,
+        matches[0].awayGoals,
+        matches[0].attendances
     );
   return 0;
 }
