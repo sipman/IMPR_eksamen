@@ -1,72 +1,134 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define SOURCEFILE "superliga-2015-2016"
+
 typedef struct {
-  int day;
-  int month;
-  int year;
+  int day, month, year;
 } date;
+
 typedef struct {
-  int hours;
-  int minutes;
+  int hours, minutes;
 } time;
+
 typedef struct {
-  char round[4];
+  int round;
   char weekDay[4];
   date date;
   time time;
-  char homeTeam[4];
-  char awayTeam[4];
-  int homeGoals;
-  int awayGoals;
-  int attendances;
+  char homeTeam[4], awayTeam[4];
+  int homeGoals, awayGoals, attendances;
 } match;
-void initiateData(int *numberOfRounds, int *numberOfMatches, FILE *inputFile);
+
+match *findDrawsSearch(int goalDelimeter, match *matches, int matches_length);
+int countLines(int *outputLineLength, FILE *inputFile);
+void prepareData(match *matches, int str_buffer, FILE *inputFile);
 match generateMatchFromStr(char *str);
-int getNumberOfRounds(char *round, int currentRoundNumber);
+int getNumberOfRounds(int roundNum, int currentRoundNumber);
+void printAllMatches(match *matches, int numberOfMatches);
+
 int main(void){
-  int numberOfRounds=0, numberOfMatches=0;
   FILE *input = fopen(SOURCEFILE, "r");
+  int maxLineLength, numberOfMatches = countLines(&maxLineLength,input);
+  match *draws;
+  int i;
+  match *season = malloc(numberOfMatches*sizeof(match));
   if (input == NULL){
         exit(EXIT_FAILURE);
   }
-  initiateData(&numberOfRounds, &numberOfMatches, input);
-
-  /*printf("%s %s %02d/%02d/%d %02d:%02d %s - %s %d-%d %d\n",
-        matches[0].round,
-        matches[0].weekDay,
-        matches[0].date.day,
-        matches[0].date.month,
-        matches[0].date.year,
-        matches[0].time.hours,
-        matches[0].time.minutes,
-        matches[0].homeTeam,
-        matches[0].awayTeam,
-        matches[0].homeGoals,
-        matches[0].awayGoals,
-        matches[0].attendances
-    );*/
+  prepareData(season, maxLineLength, input);
   fclose(input);
-  printf("Number of matches: %d\n", numberOfMatches);
-  printf("Number of rounds: %d\n", numberOfRounds);
+
+  draws = findDrawsSearch(4, season, numberOfMatches);
+  for (i = 0; i < numberOfMatches; i++ ) {
+    if((draws+i)->round == 0){
+      break;
+    }
+      printf("%02d %s %02d/%02d/%d %02d:%02d %s - %s %d-%d %d\n",
+        (draws+i)->round,
+        (draws+i)->weekDay,
+        (draws+i)->date.day,
+        (draws+i)->date.month,
+        (draws+i)->date.year,
+        (draws+i)->time.hours,
+        (draws+i)->time.minutes,
+        (draws+i)->homeTeam,
+        (draws+i)->awayTeam,
+        (draws+i)->homeGoals,
+        (draws+i)->awayGoals,
+        (draws+i)->attendances);
+   }
+  /*printAllMatches(season, numberOfMatches);*/
+
   return 0;
 }
 
-void initiateData(int *numberOfRounds, int *numberOfMatches, FILE *inputFile){
-  char str[255];
-  match currentMatch;
-   while (fgets(str, sizeof(str), inputFile)) {
-        *numberOfMatches += 1;
-        currentMatch = generateMatchFromStr(str);
-        *numberOfRounds = getNumberOfRounds(currentMatch.round, *numberOfRounds);
+match *findDrawsSearch(int goalDelimeter, match *matches, int matches_length){
+  match *hits = (match*) malloc(matches_length*sizeof(match));
+  int i, numOfHits=0;
+    for(i=0; i<matches_length; i++){
+        if(matches[i].homeGoals == matches[i].awayGoals && matches[i].homeGoals+matches[i].awayGoals==goalDelimeter){
+            hits[numOfHits] = matches[i];
+            numOfHits++;
+        }
     }
+  return hits;
 }
 
+/**
+ * Counts the amount of newlines in a text file, it start by counting 1 line
+ * in order to return correct number total lines in the file.
+ * @FILE*   inputFile [The text file]
+ * @return  int       [The total amount of lines in the file]
+ */
+int countLines(int *outputLineLength, FILE *inputFile){
+    int numberOfMatches=1, charCount=0, maxCharCount=0;
+    char ch;
+    while(!feof(inputFile))
+    {
+      ch = fgetc(inputFile);
+      charCount++;
+      if(ch == '\n'){
+        if(charCount>maxCharCount){
+            maxCharCount = charCount;
+        }
+        charCount = 0;
+        numberOfMatches += 1;
+      }
+    }
+    rewind(inputFile);
+    *outputLineLength = maxCharCount;
+    return numberOfMatches;
+}
+
+/**
+ * Parses data from file to the array of match struct
+ * @match*  season     [The array of match structs]
+ * @int     str_buffer [The buffer size of the string array]
+ * @FILE*   inputFile  [The text file]
+ */
+void prepareData(match *matches, int str_buffer, FILE *inputFile){
+    char *str = (char*) malloc(str_buffer+1);
+    int i=0;
+    /* DEVNOTE: why is +1 neede ? no one knows....
+                why dosn't sizeof(str) work ? what a mistery !!*/
+    while (fgets(str, str_buffer+1, inputFile)) {
+        matches[i] = generateMatchFromStr(str);
+        i++;
+    }
+    free(str);
+}
+
+/**
+ * [HELPER FUNCTION TO iniateData]
+ * Takes a string and parse it to a match struct
+ * @char*   str    [The string array from the text line]
+ * @return  match  [The match struct containing all the data]
+ */
 match generateMatchFromStr(char *str){
   match currentMatch;
   double attendances = 0;
-  sscanf(str, " %[R0123456789] %s %d/%d/%d %d.%d %s - %s %d - %d %lf",
-              currentMatch.round,
+  sscanf(str, " R%02d %s %d/%d/%d %d.%d %s - %s %d - %d %lf",
+              &currentMatch.round,
               currentMatch.weekDay,
               &currentMatch.date.day,
               &currentMatch.date.month,
@@ -83,11 +145,28 @@ match generateMatchFromStr(char *str){
   return currentMatch;
 }
 
-int getNumberOfRounds(char *round, int currentRoundNumber){
-    int roundNum;
-    sscanf(round, "R%d", &roundNum);
-    if(roundNum < currentRoundNumber){
-        return currentRoundNumber;
-    }
-    return roundNum;
+/**
+ * [DEVELOPER FUNCTION]
+ * Simply prints out an array of matches in the same format as the textfile.
+ * @match* matches          [An array containing match structs]
+ * @int    numberOfMatches  [The number of matches that are in the array] (because C89 sucks)
+ */
+void printAllMatches(match *matches, int numberOfMatches){
+  int i;
+  for(i=0; i<numberOfMatches; i++){
+      printf("%d %s %02d/%02d/%d %02d:%02d %s - %s %d-%d %d\n",
+        matches[i].round,
+        matches[i].weekDay,
+        matches[i].date.day,
+        matches[i].date.month,
+        matches[i].date.year,
+        matches[i].time.hours,
+        matches[i].time.minutes,
+        matches[i].homeTeam,
+        matches[i].awayTeam,
+        matches[i].homeGoals,
+        matches[i].awayGoals,
+        matches[i].attendances
+    );
+  }
 }
