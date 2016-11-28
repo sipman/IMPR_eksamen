@@ -26,13 +26,13 @@ typedef struct {
 void initateData(int *maxLineLength, int *numberOfMatches, int *numberOfRounds, FILE *inputFile);
 void prepareData(match *matches, round *rounds, int str_buffer, FILE *inputFile);
 void showDrawMatches(int goalDelimiter, match *matches, int numberOfMatches);
-void showRoundsWithLesserGoals(int goalDelimiter, round *rounds, int numberOfRounds);
+void showARoundWithLesserGoals(int goalDelimiter, round *rounds, int numberOfRounds);
 void printAMatch(match match);
 void printAllMatches(match *matches, int numberOfMatches);
 match generateMatchFromStr(char *str, round *rounds);
 int generateNumberOfRounds(int roundNumber, int currentRoundNumber);
 match *findDrawsSearch(int goalDelimiter, match *matches, int matches_length);
-round *findRoundsWithLesserGoals(int goalDelimiter, round *rounds, int numberOfRounds);
+void findFirstRoundWithLesserGoals(int *resultRound, int *resultGoals, int goalDelimiter, round *rounds, int numberOfRounds);
 
 int main(void){
   FILE *input = fopen(SOURCEFILE, "r");
@@ -52,7 +52,7 @@ int main(void){
   }
   prepareData(season, rounds, maxLineLength, input);
   fclose(input);
-  /*showRoundsWithLesserGoals(10,rounds, numberOfRounds);*/
+  showARoundWithLesserGoals(10, rounds, numberOfRounds);
   /*showDrawMatches(4, season, numberOfMatches);*/
   /*printAllMatches(season, numberOfMatches);*/
 
@@ -128,14 +128,10 @@ void prepareData(match *matches, round *rounds, int str_buffer, FILE *inputFile)
  * @param[in]  *rounds         The array of rounds.
  * @param[in]  numberOfRounds  The number of rounds in the array.
  */
-void showRoundsWithLesserGoals(int goalDelimiter, round *rounds, int numberOfRounds){
-  round *roundsWithLesserGoals = findRoundsWithLesserGoals(goalDelimiter, rounds, numberOfRounds);
-  int i=0;
-  while(roundsWithLesserGoals[i].round != 0){
-    printf("Round: %2d\t Goals: %d\n", roundsWithLesserGoals[i].round, roundsWithLesserGoals[i].goals);
-    i++;
-  }
-  free(roundsWithLesserGoals);
+void showARoundWithLesserGoals(int goalDelimiter, round *rounds, int numberOfRounds){
+  int resultRound, resultGoals;
+  findFirstRoundWithLesserGoals(&resultRound, &resultGoals, goalDelimiter, rounds, numberOfRounds);
+  printf("Round: %2d\t Goals: %d\n", resultRound, resultGoals);
 }
 /**
  * @brief      Shows the draw matches with lesser total goal than the delimiter.
@@ -259,36 +255,20 @@ match *findDrawsSearch(int goalDelimiter, match *matches, int matches_length){
 }
 
 /**
- * @brief      Finds the rounds with lesser total goals than the delimiter
+ * @brief      Finds the first round with lesser total goals than the delimiter.
  *
+ * @param      resultRound     The output result round
+ * @param      resultGoals     the output result goals
  * @param[in]  goalDelimiter   The goal delimiter
  * @param[in]  rounds          The array of rounds
- * @param[in]  numberOfRounds  The number of rounds in the array
- *
- * @return     Returns the pointer to the resultArray containing all the hits.
+ * @param[in]  numberOfRounds  The number of rounds in array
  */
-round *findRoundsWithLesserGoals(int goalDelimiter, round *rounds, int numberOfRounds){
-  int *hits = (int*) malloc(numberOfRounds*sizeof(int));
-  round *returnArray;
-  int i, numOfHits=0;
-  if (hits == NULL){
-    printf("%s", "Not enough ram, sorry..");
-    exit(EXIT_FAILURE);
-  }
+void findFirstRoundWithLesserGoals(int *resultRound, int *resultGoals, int goalDelimiter, round *rounds, int numberOfRounds){
+  int i;
   for(i=0; i<numberOfRounds; i++){
       if(rounds[i].goals < goalDelimiter){
-        hits[numOfHits] = i;
-        numOfHits++;
+        *resultRound = rounds[i].round;
+        *resultGoals = rounds[i].goals;
       }
     }
-  returnArray = (round*) malloc(numOfHits*sizeof(round));
-  if (returnArray == NULL){
-    printf("%s", "Not enough ram, sorry..");
-    exit(EXIT_FAILURE);
-  }
-  for(i=0; i<numOfHits; i++){
-    returnArray[i] = rounds[hits[i]];
-  }
-  free(hits);
-  return returnArray;
 }
