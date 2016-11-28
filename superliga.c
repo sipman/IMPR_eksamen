@@ -109,6 +109,13 @@ void prepareData(match *matches, round *rounds, team *teams,  FILE *inputFile){
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * OUTPUT FUNCTIONS  * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/**
+ * @brief      Shows the team with lowest attendances in a given year.
+ *
+ * @param      fromStr  The from date in string format ex. dd/mm/yyyy
+ * @param      toStr    The to date in string format ex. dd/mm/yyyy
+ * @param      matches  The matches
+ */
 void showTeamWithLowestAttendances(char *fromStr, char *toStr, match *matches){
   char teamname[TEAMNAMEBUFFER];
   int attendances=0;
@@ -126,54 +133,6 @@ void showTeamWithLowestAttendances(char *fromStr, char *toStr, match *matches){
         );
   findTeamWithLowestAttendances(teamname, &attendances, from, to, matches);
   printf("Between %02d/%02d/%02d and %02d/%02d/%02d the team with the lowest attendances is %-3s with %d\n", from.day, from.month, from.year, to.day, to.month, to.year, teamname, attendances);
-}
-void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, date to, match *matches){
-  int i, numOfHits;
-  match *filteredMatches = filterMatchesByDate(from, to, matches, &numOfHits);
-  spectator *filteredAttendences = calloc(NUMOFTEAMS, sizeof(spectator));
-  spectator *current;
-  for(i=0; i<numOfHits; i++){
-      current = findSpectators(filteredMatches[i].homeTeam->name, filteredAttendences);
-      strcpy(current->teamname, filteredMatches[i].homeTeam->name);
-      current->attendances += filteredMatches[i].attendances.attendances;
-  }
-  for(i=0; i<NUMOFTEAMS; i++){
-    if(filteredAttendences[i].attendances < *attendances || *attendances == 0){
-          *attendances = filteredAttendences[i].attendances;
-          strcpy(teamname, filteredAttendences[i].teamname);
-      }
-  }
-  free(filteredAttendences);
-  free(filteredMatches);
-}
-spectator *findSpectators(char *teamName, spectator *attendances){
-  int i=0, found=0, nextTick=-1;
-  while(!found && i < NUMOFTEAMS){
-    if(!strcmp(attendances[i].teamname, teamName)){
-        found = 1;
-        return &attendances[i];
-    }else if(nextTick == -1 && strlen(attendances[i].teamname) == 0){
-        nextTick = i;
-    }
-    i++;
-  }
-  return &attendances[nextTick];
-}
-match *filterMatchesByDate(date from, date to, match *matches, int *resultNum){
-  int i, numOfHits=0;
-  match *filteredMatches = (match*) calloc(NUMOFTOTALMACHTES, sizeof(match));
-  if(filteredMatches == NULL){
-    exit(EXIT_FAILURE);
-  }
-  for(i=0; i<NUMOFTOTALMACHTES; i++){
-      if(matches[i].date.day >= from.day && matches[i].date.month >= from.month && matches[i].date.year >= from.year && matches[i].date.day <= to.day && matches[i].date.month <= to.month && matches[i].date.year <= to.year){
-          filteredMatches[numOfHits] = matches[i];
-          numOfHits++;
-      }
-  }
-  filteredMatches = (match*) realloc(filteredMatches, numOfHits*sizeof(match));
-  *resultNum = numOfHits;
-  return filteredMatches;
 }
 /**
  * @brief      Shows the teams dominating away.
@@ -311,6 +270,82 @@ match generateMatchFromStr(char *str, round *rounds, team *teams){
   currentMatch.round->round = round;
   currentMatch.round->goals += currentMatch.homeGoals+currentMatch.awayGoals;
   return currentMatch;
+}
+/**
+ * @brief      Finds the team with the lowest attendances in a given time span
+ *
+ * @param      teamname     The teamname
+ * @param      attendances  The attendances
+ * @param[in]  from         The from date
+ * @param[in]  to           The to date
+ * @param      matches      The matches
+ */
+void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, date to, match *matches){
+  int i, numOfHits;
+  match *filteredMatches = filterMatchesByDate(from, to, matches, &numOfHits);
+  spectator *filteredAttendences = calloc(NUMOFTEAMS, sizeof(spectator));
+  spectator *current;
+  for(i=0; i<numOfHits; i++){
+      current = findSpectators(filteredMatches[i].homeTeam->name, filteredAttendences);
+      strcpy(current->teamname, filteredMatches[i].homeTeam->name);
+      current->attendances += filteredMatches[i].attendances.attendances;
+  }
+  for(i=0; i<NUMOFTEAMS; i++){
+    if(filteredAttendences[i].attendances < *attendances || *attendances == 0){
+          *attendances = filteredAttendences[i].attendances;
+          strcpy(teamname, filteredAttendences[i].teamname);
+      }
+  }
+  free(filteredAttendences);
+  free(filteredMatches);
+}
+/**
+ * @brief      Find the corosponding pointer in the attendances array,
+ *             if not present returns the pointer to the next space in the array
+ *
+ * @param      teamName     The team name
+ * @param      attendances  The attendances
+ *
+ * @return     A pointer to the correct placement of the teamName
+ */
+spectator *findSpectators(char *teamName, spectator *attendances){
+  int i=0, found=0, nextTick=-1;
+  while(!found && i < NUMOFTEAMS){
+    if(!strcmp(attendances[i].teamname, teamName)){
+        found = 1;
+        return &attendances[i];
+    }else if(nextTick == -1 && strlen(attendances[i].teamname) == 0){
+        nextTick = i;
+    }
+    i++;
+  }
+  return &attendances[nextTick];
+}
+/**
+ * @brief      filter an array of mathces by date.
+ *
+ * @param[in]  from       The from date
+ * @param[in]  to         The to date
+ * @param      matches    The matches
+ * @param      resultNum  The result number
+ *
+ * @return     Pointer to the filtered array in the heap
+ */
+match *filterMatchesByDate(date from, date to, match *matches, int *resultNum){
+  int i, numOfHits=0;
+  match *filteredMatches = (match*) calloc(NUMOFTOTALMACHTES, sizeof(match));
+  if(filteredMatches == NULL){
+    exit(EXIT_FAILURE);
+  }
+  for(i=0; i<NUMOFTOTALMACHTES; i++){
+      if(matches[i].date.day >= from.day && matches[i].date.month >= from.month && matches[i].date.year >= from.year && matches[i].date.day <= to.day && matches[i].date.month <= to.month && matches[i].date.year <= to.year){
+          filteredMatches[numOfHits] = matches[i];
+          numOfHits++;
+      }
+  }
+  filteredMatches = (match*) realloc(filteredMatches, numOfHits*sizeof(match));
+  *resultNum = numOfHits;
+  return filteredMatches;
 }
 /**
  * @brief      Finds an array of the teams who dominated away games
