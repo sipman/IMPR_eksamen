@@ -35,15 +35,22 @@ typedef struct {
 } team;
 
 typedef struct {
+  char teamname[TEAMNAMEBUFFER];
+  int attendances;
+} spectator;
+
+typedef struct {
   round *round;
   char weekDay[WEEKDAYBUFFER];
   date date;
   time time;
   team *homeTeam, *awayTeam;
-  int homeGoals, awayGoals, attendances;
+  int homeGoals, awayGoals;
+  spectator attendances;
 } match;
 
 void prepareData(match *matches, round *rounds, team *teams, FILE *inputFile);
+void showTeamWithLowestAttendances(char *from, char *to, match *matches);
 void showTeamsDominatingAway(team *teams);
 void showDrawMatches(int goalDelimiter, match *matches);
 void showARoundWithLesserGoals(int goalDelimiter, round *rounds);
@@ -51,6 +58,9 @@ void printAMatch(match match);
 void printAllMatches(match *matches, int numberOfMatches);
 match generateMatchFromStr(char *str, round *rounds, team *teams);
 int generateNumberOfRounds(int roundNumber, int currentRoundNumber);
+void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, date to, match *matches);
+spectator *findSpectators(char *teamName, spectator *attendances);
+match *filterMatchesByDate(date from, date to, match *matches, int *resultNum);
 team *findTeamsDominatingAway(team *teams, int *numOfTeamsDominatingAway);
 team *findTeam(char *teamName, team *teams);
 match *findDrawsSearch(int goalDelimiter, match *matches);
@@ -67,7 +77,8 @@ int main(void){
   }
   prepareData(season, rounds, teams, input);
   fclose(input);
-  showTeamsDominatingAway(teams);
+  /*showTeamWithLowestAttendances("1/1/2015", "31/12/2015", season);*/
+  /*showTeamsDominatingAway(teams);*/
   /*showARoundWithLesserGoals(10, rounds);*/
   /*showDrawMatches(4, season);*/
   /*printAllMatches(season, NUMOFTOTALMACHTES);*/
@@ -98,7 +109,72 @@ void prepareData(match *matches, round *rounds, team *teams,  FILE *inputFile){
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * OUTPUT FUNCTIONS  * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
+void showTeamWithLowestAttendances(char *fromStr, char *toStr, match *matches){
+  char teamname[TEAMNAMEBUFFER];
+  int attendances=0;
+  date from;
+  date to;
+  sscanf(fromStr, "%d/%d/%d",
+          &from.day,
+          &from.month,
+          &from.year
+        );
+  sscanf(toStr, "%d/%d/%d",
+          &to.day,
+          &to.month,
+          &to.year
+        );
+  findTeamWithLowestAttendances(teamname, &attendances, from, to, matches);
+  printf("Between %02d/%02d/%02d and %02d/%02d/%02d the team with the lowest attendances is %-3s with %d\n", from.day, from.month, from.year, to.day, to.month, to.year, teamname, attendances);
+}
+void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, date to, match *matches){
+  int i, numOfHits;
+  match *filteredMatches = filterMatchesByDate(from, to, matches, &numOfHits);
+  spectator *filteredAttendences = calloc(NUMOFTEAMS, sizeof(spectator));
+  spectator *current;
+  for(i=0; i<numOfHits; i++){
+      current = findSpectators(filteredMatches[i].homeTeam->name, filteredAttendences);
+      strcpy(current->teamname, filteredMatches[i].homeTeam->name);
+      current->attendances += filteredMatches[i].attendances.attendances;
+  }
+  for(i=0; i<NUMOFTEAMS; i++){
+    if(filteredAttendences[i].attendances < *attendances || *attendances == 0){
+          *attendances = filteredAttendences[i].attendances;
+          strcpy(teamname, filteredAttendences[i].teamname);
+      }
+  }
+  free(filteredAttendences);
+  free(filteredMatches);
+}
+spectator *findSpectators(char *teamName, spectator *attendances){
+  int i=0, found=0, nextTick=-1;
+  while(!found && i < NUMOFTEAMS){
+    if(!strcmp(attendances[i].teamname, teamName)){
+        found = 1;
+        return &attendances[i];
+    }else if(nextTick == -1 && strlen(attendances[i].teamname) == 0){
+        nextTick = i;
+    }
+    i++;
+  }
+  return &attendances[nextTick];
+}
+match *filterMatchesByDate(date from, date to, match *matches, int *resultNum){
+  int i, numOfHits=0;
+  match *filteredMatches = (match*) calloc(NUMOFTOTALMACHTES, sizeof(match));
+  if(filteredMatches == NULL){
+    exit(EXIT_FAILURE);
+  }
+  for(i=0; i<NUMOFTOTALMACHTES; i++){
+      if(matches[i].date.day >= from.day && matches[i].date.month >= from.month && matches[i].date.year >= from.year && matches[i].date.day <= to.day && matches[i].date.month <= to.month && matches[i].date.year <= to.year){
+          filteredMatches[numOfHits] = matches[i];
+          numOfHits++;
+      }
+  }
+  filteredMatches = (match*) realloc(filteredMatches, numOfHits*sizeof(match));
+  *resultNum = numOfHits;
+  return filteredMatches;
+}
 /**
  * @brief      Shows the teams dominating away.
  *
@@ -110,6 +186,7 @@ void showTeamsDominatingAway(team *teams){
   for(i=0; i < numOfTeamsDominatingAway; i++){
     printf("%s with %d away wins against %d home wins\n", teamsDominatingAway[i].name, teamsDominatingAway[i].awayWins, teamsDominatingAway[i].homeWins);
   }
+  free(teamsDominatingAway);
 }
 
 /**
@@ -156,7 +233,7 @@ void printAMatch(match match){
         match.awayTeam->name,
         match.homeGoals,
         match.awayGoals,
-        match.attendances
+        match.attendances.attendances
     );
 }
 /**
@@ -203,7 +280,8 @@ match generateMatchFromStr(char *str, round *rounds, team *teams){
         &currentMatch.awayGoals,
         &attendances
   );
-  currentMatch.attendances = (attendances*1000);
+  strcpy(currentMatch.attendances.teamname, homeTeam);
+  currentMatch.attendances.attendances = (attendances*1000);
   /* Home team stat generate */
   currentMatch.homeTeam = findTeam(homeTeam, teams);
   strcpy(currentMatch.homeTeam->name, homeTeam);
