@@ -424,9 +424,9 @@ match generateMatchFromStr(char *str, round **rounds, team *teams){
   currentMatch.awayTeam->awayDraws += (currentMatch.awayGoals==currentMatch.homeGoals);
   currentMatch.awayTeam->points += (currentMatch.awayGoals>currentMatch.homeGoals) ? WINPOINTS : (currentMatch.awayGoals==currentMatch.homeGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Round stat generate */
+  (*rounds)[(round-1)].round = round;
+  (*rounds)[(round-1)].goals = currentMatch.homeGoals+currentMatch.awayGoals;
   currentMatch.round = &(*rounds)[(round-1)];
-  currentMatch.round->round = round;
-  currentMatch.round->goals += currentMatch.homeGoals+currentMatch.awayGoals;
   return currentMatch;
 }
 
