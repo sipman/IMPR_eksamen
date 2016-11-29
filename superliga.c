@@ -46,7 +46,7 @@ typedef struct {
   int homeGoals, awayGoals;
   int attendances;
 } match;
-void prepareData(match *matches, round *rounds, team *teams, FILE *inputFile);
+void prepareData(match **matches, round **rounds, team **teams, FILE *inputFile);
 void welcomeMessage();
 void helpMessage();
 int scanOption();
@@ -87,7 +87,7 @@ int main(void){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
   }
-  prepareData(season, rounds, teams, input);
+  prepareData(&season, &rounds, &teams, input);
   fclose(input);
 
   welcomeMessage();
@@ -112,11 +112,11 @@ int main(void){
  * @param      teams      The array of teams
  * @param      inputFile  The input file
  */
-void prepareData(match *matches, round *rounds, team *teams,  FILE *inputFile){
+void prepareData(match **matches, round **rounds, team **teams,  FILE *inputFile){
   char *str = (char*) calloc(MAXLINELENGTH, sizeof(char));
   int i=0;
   while (fgets(str, MAXLINELENGTH, inputFile)) {
-    matches[i] = generateMatchFromStr(str, rounds, teams);
+    (*matches)[i] = generateMatchFromStr(str, *rounds, *teams);
      i++;
   }
   free(str);
