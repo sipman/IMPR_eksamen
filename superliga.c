@@ -182,6 +182,7 @@ int runCommand(int option, FILE *input, match *season, round *rounds, team *team
     newOption = scanOption();
     runCommand(newOption, input, season, rounds, teams);
   }
+  return 0;
 }
 void clearBuffer(){
   int c;
