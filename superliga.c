@@ -60,7 +60,7 @@ void showDrawMatches(int goalDelimiter, match *matches);
 void showARoundWithLesserGoals(int goalDelimiter, round *rounds);
 void printAMatch(match match);
 void printAllMatches(match *matches, int numberOfMatches);
-match generateMatchFromStr(char *str, round **rounds, team *teams);
+void generateMatchFromStr(char *str, round *rounds, team *teams, match *match);
 int generateNumberOfRounds(int roundNumber, int currentRoundNumber);
 void copyTeamArray(team *dest, team *path);
 int findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, match **filteredMatches);
@@ -116,8 +116,8 @@ void prepareData(match **matches, round **rounds, team **teams,  FILE *inputFile
   char *str = (char*) calloc(MAXLINELENGTH, sizeof(char));
   int i=0;
   while (fgets(str, MAXLINELENGTH, inputFile)) {
-    (*matches)[i] = generateMatchFromStr(str, rounds, *teams);
-     i++;
+    generateMatchFromStr(str, *rounds, *teams, &(*matches)[i]);
+    i++;
   }
   free(str);
 }
@@ -378,56 +378,54 @@ void copyTeamArray(team *dest, team *path){
  *
  * @return     { description_of_the_return_value }
  */
-match generateMatchFromStr(char *str, round **rounds, team *teams){
-  match currentMatch;
+void generateMatchFromStr(char *str, round *rounds, team *teams, match *destination){
   double attendances = 0;
   int round;
   char homeTeam[TEAMNAMEBUFFER], awayTeam[TEAMNAMEBUFFER];
   sscanf(str, " R%02d %s %d/%d/%d %d.%d %s - %s %d - %d %lf",
         &round,
-        currentMatch.weekDay,
-        &currentMatch.date.day,
-        &currentMatch.date.month,
-        &currentMatch.date.year,
-        &currentMatch.time.hours,
-        &currentMatch.time.minutes,
+        destination->weekDay,
+        &destination->date.day,
+        &destination->date.month,
+        &destination->date.year,
+        &destination->time.hours,
+        &destination->time.minutes,
         homeTeam,
         awayTeam,
-        &currentMatch.homeGoals,
-        &currentMatch.awayGoals,
+        &destination->homeGoals,
+        &destination->awayGoals,
         &attendances
   );
 
-  currentMatch.attendances = (attendances*1000);
+  destination->attendances = (attendances*1000);
   /* Home team stat generate */
-  currentMatch.homeTeam = findTeam(homeTeam, teams);
-  strcpy(currentMatch.homeTeam->name, homeTeam);
-  currentMatch.homeTeam->homeMatches += 1;
-  currentMatch.homeTeam->homeGoalsScored += currentMatch.homeGoals;
-  currentMatch.homeTeam->homeGoalsConceded += currentMatch.awayGoals;
-  currentMatch.homeTeam->totalGoalsScored += currentMatch.homeGoals;
-  currentMatch.homeTeam->totalGoalsConceded += currentMatch.awayGoals;
-  currentMatch.homeTeam->homeWins += (currentMatch.homeGoals>currentMatch.awayGoals);
-  currentMatch.homeTeam->homeLoses += (currentMatch.homeGoals<currentMatch.awayGoals);
-  currentMatch.homeTeam->homeDraws += (currentMatch.homeGoals==currentMatch.awayGoals);
-  currentMatch.homeTeam->points += (currentMatch.homeGoals>currentMatch.awayGoals) ? WINPOINTS : (currentMatch.homeGoals==currentMatch.awayGoals) ? DRAWPOINTS : LOOSEPOINTS;
+  destination->homeTeam = findTeam(homeTeam, teams);
+  strcpy(destination->homeTeam->name, homeTeam);
+  destination->homeTeam->homeMatches += 1;
+  destination->homeTeam->homeGoalsScored += destination->homeGoals;
+  destination->homeTeam->homeGoalsConceded += destination->awayGoals;
+  destination->homeTeam->totalGoalsScored += destination->homeGoals;
+  destination->homeTeam->totalGoalsConceded += destination->awayGoals;
+  destination->homeTeam->homeWins += (destination->homeGoals>destination->awayGoals);
+  destination->homeTeam->homeLoses += (destination->homeGoals<destination->awayGoals);
+  destination->homeTeam->homeDraws += (destination->homeGoals==destination->awayGoals);
+  destination->homeTeam->points += (destination->homeGoals>destination->awayGoals) ? WINPOINTS : (destination->homeGoals==destination->awayGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Away team stat generate */
-  currentMatch.awayTeam = findTeam(awayTeam, teams);
-  strcpy(currentMatch.awayTeam->name, awayTeam);
-  currentMatch.awayTeam->awayMatches += 1;
-  currentMatch.awayTeam->awayGoalsScored += currentMatch.awayGoals;
-  currentMatch.awayTeam->awayGoalsConceded += currentMatch.homeGoals;
-  currentMatch.awayTeam->totalGoalsScored += currentMatch.awayGoals;
-  currentMatch.awayTeam->totalGoalsConceded += currentMatch.homeGoals;
-  currentMatch.awayTeam->awayWins += (currentMatch.awayGoals>currentMatch.homeGoals);
-  currentMatch.awayTeam->awayLoses += (currentMatch.awayGoals<currentMatch.homeGoals);
-  currentMatch.awayTeam->awayDraws += (currentMatch.awayGoals==currentMatch.homeGoals);
-  currentMatch.awayTeam->points += (currentMatch.awayGoals>currentMatch.homeGoals) ? WINPOINTS : (currentMatch.awayGoals==currentMatch.homeGoals) ? DRAWPOINTS : LOOSEPOINTS;
+  destination->awayTeam = findTeam(awayTeam, teams);
+  strcpy(destination->awayTeam->name, awayTeam);
+  destination->awayTeam->awayMatches += 1;
+  destination->awayTeam->awayGoalsScored += destination->awayGoals;
+  destination->awayTeam->awayGoalsConceded += destination->homeGoals;
+  destination->awayTeam->totalGoalsScored += destination->awayGoals;
+  destination->awayTeam->totalGoalsConceded += destination->homeGoals;
+  destination->awayTeam->awayWins += (destination->awayGoals>destination->homeGoals);
+  destination->awayTeam->awayLoses += (destination->awayGoals<destination->homeGoals);
+  destination->awayTeam->awayDraws += (destination->awayGoals==destination->homeGoals);
+  destination->awayTeam->points += (destination->awayGoals>destination->homeGoals) ? WINPOINTS : (destination->awayGoals==destination->homeGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Round stat generate */
-  (*rounds)[(round-1)].round = round;
-  (*rounds)[(round-1)].goals = currentMatch.homeGoals+currentMatch.awayGoals;
-  currentMatch.round = &(*rounds)[(round-1)];
-  return currentMatch;
+  destination->round = &rounds[(round-1)];
+  destination->round->round = round;
+  destination->round->goals += destination->homeGoals+destination->awayGoals;
 }
 
 /**
