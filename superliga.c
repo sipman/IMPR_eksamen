@@ -24,14 +24,15 @@ typedef struct {
 } round;
 typedef struct {
   char name[TEAMNAMEBUFFER];
-  int awayMatches, homeMatches,
+  int totalMatches, totalWins, totalDraws, totalLoses, totalGoalsScored, totalGoalsConceded, awayWins, homeWins, points;
+  /*int awayMatches, homeMatches,
       awayWins, homeWins,
       awayLoses, homeLoses,
       awayDraws, homeDraws,
       totalGoalsScored, totalGoalsConceded,
       awayGoalsScored, homeGoalsScored,
       awayGoalsConceded, homeGoalsConceded,
-      points;
+      points;*/
 } team;
 typedef struct {
   char teamname[TEAMNAMEBUFFER];
@@ -213,15 +214,15 @@ void showLeagueTable(team *teams){
   for(i=0; i<NUMOFTEAMS; i++){
     printf("| %3d | %-4s | %-2d | %-2d | %-2d | %-2d | %-2d | %-2d | %+3d | %-2d |\n",
         (i+1),
-        teams[i].name,
-        teams[i].awayMatches+teams[i].homeMatches,
-        teams[i].awayWins+teams[i].homeWins,
-        teams[i].awayDraws+teams[i].homeDraws,
-        teams[i].awayLoses+teams[i].homeLoses,
-        teams[i].totalGoalsScored,
-        teams[i].totalGoalsConceded,
-        teams[i].totalGoalsScored-teams[i].totalGoalsConceded,
-        teams[i].points
+        leagueTable[i].name,
+        leagueTable[i].totalMatches,
+        leagueTable[i].totalWins,
+        leagueTable[i].totalDraws,
+        leagueTable[i].totalLoses,
+        leagueTable[i].totalGoalsScored,
+        leagueTable[i].totalGoalsConceded,
+        leagueTable[i].totalGoalsScored-leagueTable[i].totalGoalsConceded,
+        leagueTable[i].points
       );
   }
   printf("-------------------------------------------------------\n");
@@ -401,33 +402,30 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, match *destinat
   /* Home team stat generate */
   destination->homeTeam = findTeam(homeTeam, teams);
   strcpy(destination->homeTeam->name, homeTeam);
-  destination->homeTeam->homeMatches += 1;
-  destination->homeTeam->homeGoalsScored += destination->homeGoals;
-  destination->homeTeam->homeGoalsConceded += destination->awayGoals;
+  destination->homeTeam->totalMatches += 1;
   destination->homeTeam->totalGoalsScored += destination->homeGoals;
   destination->homeTeam->totalGoalsConceded += destination->awayGoals;
+  destination->homeTeam->totalWins += (destination->homeGoals>destination->awayGoals);
+  destination->homeTeam->totalDraws += (destination->homeGoals==destination->awayGoals);
+  destination->homeTeam->totalLoses += (destination->homeGoals<destination->awayGoals);
   destination->homeTeam->homeWins += (destination->homeGoals>destination->awayGoals);
-  destination->homeTeam->homeLoses += (destination->homeGoals<destination->awayGoals);
-  destination->homeTeam->homeDraws += (destination->homeGoals==destination->awayGoals);
   destination->homeTeam->points += (destination->homeGoals>destination->awayGoals) ? WINPOINTS : (destination->homeGoals==destination->awayGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Away team stat generate */
   destination->awayTeam = findTeam(awayTeam, teams);
   strcpy(destination->awayTeam->name, awayTeam);
-  destination->awayTeam->awayMatches += 1;
-  destination->awayTeam->awayGoalsScored += destination->awayGoals;
-  destination->awayTeam->awayGoalsConceded += destination->homeGoals;
+  destination->awayTeam->totalMatches += 1;
   destination->awayTeam->totalGoalsScored += destination->awayGoals;
   destination->awayTeam->totalGoalsConceded += destination->homeGoals;
+  destination->awayTeam->totalWins += (destination->awayGoals>destination->homeGoals);
+  destination->awayTeam->totalDraws += (destination->awayGoals==destination->homeGoals);
+  destination->awayTeam->totalLoses += (destination->awayGoals<destination->homeGoals);
   destination->awayTeam->awayWins += (destination->awayGoals>destination->homeGoals);
-  destination->awayTeam->awayLoses += (destination->awayGoals<destination->homeGoals);
-  destination->awayTeam->awayDraws += (destination->awayGoals==destination->homeGoals);
   destination->awayTeam->points += (destination->awayGoals>destination->homeGoals) ? WINPOINTS : (destination->awayGoals==destination->homeGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Round stat generate */
   destination->round = &rounds[(round-1)];
   destination->round->round = round;
   destination->round->goals += destination->homeGoals+destination->awayGoals;
 }
-
 /**
  * @brief      QSort compare function for showLeagueTable-function
  */
