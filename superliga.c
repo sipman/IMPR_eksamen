@@ -9,19 +9,15 @@
 #define WEEKDAYBUFFER 4
 #define MAXLINELENGTH 80
 #define SOURCEFILE "superliga-2015-2016"
-
 typedef struct {
   int day, month, year;
 } date;
-
 typedef struct {
   int hours, minutes;
 } time;
-
 typedef struct {
   int round, goals;
 } round;
-
 typedef struct {
   char name[TEAMNAMEBUFFER];
   int awayMatches, homeMatches,
@@ -33,12 +29,10 @@ typedef struct {
       awayGoalsConceded, homeGoalsConceded,
       points;
 } team;
-
 typedef struct {
   char teamname[TEAMNAMEBUFFER];
   int attendances;
 } spectator;
-
 typedef struct {
   round *round;
   char weekDay[WEEKDAYBUFFER];
@@ -48,8 +42,8 @@ typedef struct {
   int homeGoals, awayGoals;
   spectator attendances;
 } match;
-
 void prepareData(match *matches, round *rounds, team *teams, FILE *inputFile);
+void showMatchesFromAWeekDay(char *from, char *to, char *weekday, match *matches);
 void showTeamWithLowestAttendances(char *from, char *to, match *matches);
 void showTeamsDominatingAway(team *teams);
 void showDrawMatches(int goalDelimiter, match *matches);
@@ -58,6 +52,7 @@ void printAMatch(match match);
 void printAllMatches(match *matches, int numberOfMatches);
 match generateMatchFromStr(char *str, round *rounds, team *teams);
 int generateNumberOfRounds(int roundNumber, int currentRoundNumber);
+match *findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, int *numOfFilteredMatches);
 void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, date to, match *matches);
 spectator *findSpectators(char *teamName, spectator *attendances);
 match *filterMatchesByDate(date from, date to, match *matches, int *resultNum);
@@ -77,6 +72,7 @@ int main(void){
   }
   prepareData(season, rounds, teams, input);
   fclose(input);
+  /*showMatchesFromAWeekDay("08:00", "22:30", "lor", season);*/
   /*showTeamWithLowestAttendances("1/1/2015", "31/12/2015", season);*/
   /*showTeamsDominatingAway(teams);*/
   /*showARoundWithLesserGoals(10, rounds);*/
@@ -109,6 +105,25 @@ void prepareData(match *matches, round *rounds, team *teams,  FILE *inputFile){
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * OUTPUT FUNCTIONS  * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/**
+ * @brief      Shows the matches from a week day and given time periode.
+ *
+ * @param[in]      from     The from string ex. HH:MM.
+ * @param[in]      to       The to string ex. HH:MM.
+ * @param[in]      weekday  The weekday string.
+ * @param          matches  The array of matches.
+ */
+void showMatchesFromAWeekDay(char *from, char *to, char *weekday, match *matches){
+  time fromTimestamp;
+  time toTimestamp;
+  int numOfFilteredMatches;
+  match *filteredMatches;
+  sscanf(from, "%d:%d", &fromTimestamp.hours, &fromTimestamp.minutes);
+  sscanf(to, "%d:%d", &toTimestamp.hours, &toTimestamp.minutes);
+  filteredMatches = findMatchesFromAWeekDay(fromTimestamp, toTimestamp, weekday, matches, &numOfFilteredMatches);
+  printAllMatches(filteredMatches, numOfFilteredMatches);
+  free(filteredMatches);
+}
 /**
  * @brief      Shows the team with lowest attendances in a given year.
  *
@@ -147,7 +162,6 @@ void showTeamsDominatingAway(team *teams){
   }
   free(teamsDominatingAway);
 }
-
 /**
  * @brief      Shows the rounds with lesser total goals than the delimiter.
  *
@@ -270,6 +284,31 @@ match generateMatchFromStr(char *str, round *rounds, team *teams){
   currentMatch.round->round = round;
   currentMatch.round->goals += currentMatch.homeGoals+currentMatch.awayGoals;
   return currentMatch;
+}
+/**
+ * @brief      Finds and returns the array of matches that is played
+ *             on the given weekday and from & to timestamp
+ *
+ * @param[in]  from                  The from timestamp
+ * @param[in]  to                    The to timestamp
+ * @param      weekday               The weekday string
+ * @param      matches               The matches array
+ * @param      numOfFilteredMatches  The number of filtered matches
+ *
+ * @return     Pointer to the filtered array stored in the heap.
+ */
+match *findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, int *numOfFilteredMatches){
+  match *resultArray = calloc(NUMOFTOTALMACHTES, sizeof(match));
+  int i, numOfHits=0;
+  for(i=0; i < NUMOFTOTALMACHTES; i++){
+    if(!strcasecmp(matches[i].weekDay,weekday) && matches[i].time.hours >= from.hours && matches[i].time.minutes >= from.minutes && matches[i].time.hours <= to.hours && matches[i].time.minutes <= to.minutes){
+      resultArray[numOfHits] = matches[i];
+      numOfHits++;
+    }
+  }
+  resultArray = realloc(resultArray, numOfHits*sizeof(match));
+  *numOfFilteredMatches = numOfHits;
+  return resultArray;
 }
 /**
  * @brief      Finds the team with the lowest attendances in a given time span
@@ -395,7 +434,6 @@ team *findTeam(char *teamName, team *teams){
   }
   return &teams[nextTick];
 }
-
 /**
  * @brief      Takes an array of matches, searches for draws with the delimiter of total goals and returns an array pointer
  *
@@ -429,7 +467,6 @@ match *findDrawsSearch(int goalDelimiter, match *matches){
   free(hits);
   return returnArray;
 }
-
 /**
  * @brief      Finds the first round with lesser total goals than the delimiter.
  *
