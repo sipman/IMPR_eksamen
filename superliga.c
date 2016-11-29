@@ -79,7 +79,11 @@ int main(void){
   round *rounds = calloc(NUMOFROUNDS, sizeof(rounds));
   team  *teams  = calloc(NUMOFTEAMS, sizeof(team));
   int option;
-  if (input == NULL || season == NULL || rounds == NULL || teams == NULL){
+  if(input == NULL){
+    printf("File not found...\n");
+    exit(EXIT_FAILURE);
+  }
+  if (season == NULL || rounds == NULL || teams == NULL){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
   }
@@ -109,7 +113,7 @@ int main(void){
  * @param      inputFile  The input file
  */
 void prepareData(match *matches, round *rounds, team *teams,  FILE *inputFile){
-  char *str = (char*) malloc(MAXLINELENGTH);
+  char *str = (char*) calloc(MAXLINELENGTH, sizeof(char));
   int i=0;
   while (fgets(str, MAXLINELENGTH, inputFile)) {
     matches[i] = generateMatchFromStr(str, rounds, teams);
