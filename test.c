@@ -93,7 +93,29 @@ int main(void){
   welcomeMessage();
   helpMessage();
   option = scanOption();
-  runCommand(option, &season, &rounds, &teams);
+  switch(option){
+    case 0:
+      helpMessage();
+    break;
+    case 1:
+       showDrawMatches(4, season);
+    break;
+    case 2:
+        showARoundWithLesserGoals(10, rounds);
+    break;
+    case 3:
+        showTeamsDominatingAway(teams);
+    break;
+    case 4:
+        showTeamWithLowestAttendances("1/1/2015", "31/12/2015", season);
+    break;
+    case 5:
+        showMatchesFromAWeekDay("08:00", "22:30", "lor", season);
+    break;
+    case 6:
+        showLeagueTable(teams);
+    break;
+  }
   free(season);
   free(rounds);
   free(teams);
@@ -160,32 +182,7 @@ int scanOption(){
 }
 int runCommand(int option, match **season, round **rounds, team **teams){
   int newOption, done=0;
-  switch(option){
-    case 0:
-      helpMessage();
-    break;
-    case 1:
-       showDrawMatches(4, *season);
-    break;
-    case 2:
-        showARoundWithLesserGoals(10, *rounds);
-    break;
-    case 3:
-        showTeamsDominatingAway(*teams);
-    break;
-    case 4:
-        showTeamWithLowestAttendances("1/1/2015", "31/12/2015", *season);
-    break;
-    case 5:
-        showMatchesFromAWeekDay("08:00", "22:30", "lor", *season);
-    break;
-    case 6:
-        showLeagueTable(*teams);
-    break;
-    case 7:
-        done = 1;
-    break;
-  }
+
   if(!done){
     newOption = scanOption();
     runCommand(newOption, season, rounds, teams);
