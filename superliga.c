@@ -89,7 +89,7 @@ int main(void){
   }
   prepareData(&season, &rounds, &teams, input);
   fclose(input);
-
+  printAllMatches(season, NUMOFTOTALMACHTES);
   welcomeMessage();
   helpMessage();
   option = scanOption();
