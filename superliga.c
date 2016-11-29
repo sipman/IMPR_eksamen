@@ -60,7 +60,7 @@ void showDrawMatches(int goalDelimiter, match *matches);
 void showARoundWithLesserGoals(int goalDelimiter, round *rounds);
 void printAMatch(match match);
 void printAllMatches(match *matches, int numberOfMatches);
-match generateMatchFromStr(char *str, round *rounds, team *teams);
+match generateMatchFromStr(char *str, round **rounds, team *teams);
 int generateNumberOfRounds(int roundNumber, int currentRoundNumber);
 void copyTeamArray(team *dest, team *path);
 int findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, match **filteredMatches);
@@ -116,7 +116,7 @@ void prepareData(match **matches, round **rounds, team **teams,  FILE *inputFile
   char *str = (char*) calloc(MAXLINELENGTH, sizeof(char));
   int i=0;
   while (fgets(str, MAXLINELENGTH, inputFile)) {
-    (*matches)[i] = generateMatchFromStr(str, *rounds, *teams);
+    (*matches)[i] = generateMatchFromStr(str, rounds, *teams);
      i++;
   }
   free(str);
@@ -378,7 +378,7 @@ void copyTeamArray(team *dest, team *path){
  *
  * @return     { description_of_the_return_value }
  */
-match generateMatchFromStr(char *str, round *rounds, team *teams){
+match generateMatchFromStr(char *str, round **rounds, team *teams){
   match currentMatch;
   double attendances = 0;
   int round;
@@ -424,7 +424,7 @@ match generateMatchFromStr(char *str, round *rounds, team *teams){
   currentMatch.awayTeam->awayDraws += (currentMatch.awayGoals==currentMatch.homeGoals);
   currentMatch.awayTeam->points += (currentMatch.awayGoals>currentMatch.homeGoals) ? WINPOINTS : (currentMatch.awayGoals==currentMatch.homeGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Round stat generate */
-  currentMatch.round = &rounds[(round-1)];
+  currentMatch.round = &(*rounds)[(round-1)];
   currentMatch.round->round = round;
   currentMatch.round->goals += currentMatch.homeGoals+currentMatch.awayGoals;
   return currentMatch;
