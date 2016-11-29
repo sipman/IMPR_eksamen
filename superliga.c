@@ -8,6 +8,9 @@
 #define TEAMNAMEBUFFER 4
 #define WEEKDAYBUFFER 4
 #define MAXLINELENGTH 80
+#define WINPOINTS 3
+#define DRAWPOINTS 1
+#define LOOSEPOINTS 0
 #define SOURCEFILE "superliga-2015-2016"
 typedef struct {
   int day, month, year;
@@ -40,9 +43,15 @@ typedef struct {
   time time;
   team *homeTeam, *awayTeam;
   int homeGoals, awayGoals;
-  spectator attendances;
+  int attendances;
 } match;
 void prepareData(match *matches, round *rounds, team *teams, FILE *inputFile);
+void welcomeMessage();
+void helpMessage();
+int scanOption();
+int runCommand(int option, FILE *input, match *season, round *rounds, team *teams);
+void clearBuffer();
+void showLeagueTable(team *teams);
 void showMatchesFromAWeekDay(char *from, char *to, char *weekday, match *matches);
 void showTeamWithLowestAttendances(char *from, char *to, match *matches);
 void showTeamsDominatingAway(team *teams);
@@ -52,7 +61,9 @@ void printAMatch(match match);
 void printAllMatches(match *matches, int numberOfMatches);
 match generateMatchFromStr(char *str, round *rounds, team *teams);
 int generateNumberOfRounds(int roundNumber, int currentRoundNumber);
+void copyTeamArray(team *dest, team *path);
 match *findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, int *numOfFilteredMatches);
+int sortForLeagueTable(const void * a, const void * b);
 void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, date to, match *matches);
 spectator *findSpectators(char *teamName, spectator *attendances);
 match *filterMatchesByDate(date from, date to, match *matches, int *resultNum);
@@ -66,31 +77,32 @@ int main(void){
   match *season = calloc(NUMOFTOTALMACHTES, sizeof(match));
   round *rounds = calloc(NUMOFROUNDS, sizeof(rounds));
   team  *teams  = calloc(NUMOFTEAMS, sizeof(team));
+  int option;
   if (input == NULL || season == NULL || rounds == NULL || teams == NULL){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
   }
   prepareData(season, rounds, teams, input);
   fclose(input);
-  /*showMatchesFromAWeekDay("08:00", "22:30", "lor", season);*/
-  /*showTeamWithLowestAttendances("1/1/2015", "31/12/2015", season);*/
-  /*showTeamsDominatingAway(teams);*/
-  /*showARoundWithLesserGoals(10, rounds);*/
-  /*showDrawMatches(4, season);*/
-  /*printAllMatches(season, NUMOFTOTALMACHTES);*/
 
+  welcomeMessage();
+  helpMessage();
+  option = scanOption();
+  runCommand(option, input, season, rounds, teams);
   return 0;
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * DATA FUNCTIONS  * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
 /**
  * @brief      Parses data from file to the array of match struct
  *
- * @param      matches     The array of matches
- * @param      rounds      The array of rounds
- * @param      inputFile   The input file
+ * @param      matches    The array of matches
+ * @param      rounds     The array of rounds
+ * @param      teams      The array of teams
+ * @param      inputFile  The input file
  */
 void prepareData(match *matches, round *rounds, team *teams,  FILE *inputFile){
   char *str = (char*) malloc(MAXLINELENGTH);
@@ -105,6 +117,107 @@ void prepareData(match *matches, round *rounds, team *teams,  FILE *inputFile){
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * OUTPUT FUNCTIONS  * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+/**
+ * @brief      welcomes the user and shows help message
+ */
+void welcomeMessage(){
+  printf("Welcome to the Danish Superliga Stats analyser\n");
+}
+
+/**
+ * @brief      Shows the help message
+ */
+void helpMessage(){
+  printf("[HELP] Program Commands:\n");
+  printf("  [0] => %-40s  [%-s]\n","Help", "Shows this messages");
+  printf("  [1] => %-40s  [%-s]\n", "Show Draws", "Shows a list of drawed macthes with at least 4 goals total");
+  printf("  [2] => %-40s  [%-s]\n", "Show round with goals < 10", "Shows the first round where the number of goals is <10");
+  printf("  [3] => %-40s  [%-s]\n", "Show teams dominating away games", "Shows a list of teams who is winning more games away than home");
+  printf("  [4] => %-40s  [%-s]\n", "Show team with fewest spectators in 2015", "Shows the team which had the fewest total spectators in 2015");
+  printf("  [5] => %-40s  [%-s]\n", "Show matches on Saturdays", "Shows a list of matches played on saturdays between 08:00 and 22:30");
+  printf("  [6] => %-40s  [%-s]\n", "Show league table", "Shows the league table");
+  printf("  [7] => %-40s  [%-s]\n", "Exit", "Closes the program");
+}
+int scanOption(){
+  int option, res;
+  printf("Please select an command (type 0 for help): ");
+
+  res = scanf(" %d", &option);
+  if(res != 1 || option < -1 || option > 8){
+    printf("Couldn't reconize the command, please try again...\n");
+    clearBuffer();
+    return scanOption();
+  }
+  return option;
+}
+int runCommand(int option, FILE *input, match *season, round *rounds, team *teams){
+  int newOption, done=0;
+  switch(option){
+    case 0:
+      helpMessage();
+    break;
+    case 1:
+       showDrawMatches(4, season);
+    break;
+    case 2:
+        showARoundWithLesserGoals(10, rounds);
+    break;
+    case 3:
+        showTeamsDominatingAway(teams);
+    break;
+    case 4:
+        showTeamWithLowestAttendances("1/1/2015", "31/12/2015", season);
+    break;
+    case 5:
+        showMatchesFromAWeekDay("08:00", "22:30", "lor", season);
+    break;
+    case 6:
+        showLeagueTable(teams);
+    break;
+    case 7:
+        done = 1;
+    break;
+  }
+  if(!done){
+    newOption = scanOption();
+    runCommand(newOption, input, season, rounds, teams);
+  }
+}
+void clearBuffer(){
+  int c;
+  while((c = getchar()) != EOF)
+    if (c == '\n')
+        break;
+}
+/**
+ * @brief      Shows the league table.
+ *
+ * @param      teams  The teams
+ */
+void showLeagueTable(team *teams){
+  int i;
+  team *leagueTable = calloc(NUMOFTEAMS, sizeof(team));
+  copyTeamArray(leagueTable, teams);
+  qsort(leagueTable, NUMOFTEAMS, sizeof(team), sortForLeagueTable);
+  printf("-------------------------------------------------------\n");
+  printf("| Pos | Hold | K  | V  | U  | T  | M+ | M- | MF  | P  |\n");
+  for(i=0; i<NUMOFTEAMS; i++){
+    printf("| %3d | %-4s | %-2d | %-2d | %-2d | %-2d | %-2d | %-2d | %+3d | %-2d |\n",
+        (i+1),
+        teams[i].name,
+        teams[i].awayMatches+teams[i].homeMatches,
+        teams[i].awayWins+teams[i].homeWins,
+        teams[i].awayDraws+teams[i].homeDraws,
+        teams[i].awayLoses+teams[i].homeLoses,
+        teams[i].totalGoalsScored,
+        teams[i].totalGoalsConceded,
+        teams[i].totalGoalsScored-teams[i].totalGoalsConceded,
+        teams[i].points
+      );
+  }
+  printf("-------------------------------------------------------\n");
+}
+
 /**
  * @brief      Shows the matches from a week day and given time periode.
  *
@@ -124,6 +237,7 @@ void showMatchesFromAWeekDay(char *from, char *to, char *weekday, match *matches
   printAllMatches(filteredMatches, numOfFilteredMatches);
   free(filteredMatches);
 }
+
 /**
  * @brief      Shows the team with lowest attendances in a given year.
  *
@@ -149,6 +263,7 @@ void showTeamWithLowestAttendances(char *fromStr, char *toStr, match *matches){
   findTeamWithLowestAttendances(teamname, &attendances, from, to, matches);
   printf("Between %02d/%02d/%02d and %02d/%02d/%02d the team with the lowest attendances is %-3s with %d\n", from.day, from.month, from.year, to.day, to.month, to.year, teamname, attendances);
 }
+
 /**
  * @brief      Shows the teams dominating away.
  *
@@ -162,6 +277,7 @@ void showTeamsDominatingAway(team *teams){
   }
   free(teamsDominatingAway);
 }
+
 /**
  * @brief      Shows the rounds with lesser total goals than the delimiter.
  *
@@ -173,6 +289,7 @@ void showARoundWithLesserGoals(int goalDelimiter, round *rounds){
   findFirstRoundWithLesserGoals(&resultRound, &resultGoals, goalDelimiter, rounds);
   printf("Round: %2d\t Goals: %d\n", resultRound, resultGoals);
 }
+
 /**
  * @brief      Shows the draw matches with lesser total goal than the delimiter.
  *
@@ -188,6 +305,7 @@ void showDrawMatches(int goalDelimiter, match *matches){
   }
   free(draws);
 }
+
 /**
  * @brief      Prints a single match.
  *
@@ -206,9 +324,10 @@ void printAMatch(match match){
         match.awayTeam->name,
         match.homeGoals,
         match.awayGoals,
-        match.attendances.attendances
+        match.attendances
     );
 }
+
 /**
  * @brief      Prints an array of matches.
  *
@@ -226,13 +345,27 @@ void printAllMatches(match *matches, int numberOfMatches){
  * * * * * * * * * * * * * * * HELPER FUNCTIONS  * * * * * * * * * * * * * * * * *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /**
+ * @brief      copies one team struct array over in another
+ *
+ * @param      dest  The destination
+ * @param      path  The path
+ */
+void copyTeamArray(team *dest, team *path){
+  int i;
+  for(i=0; i<NUMOFTEAMS; i++){
+    dest[i] = path[i];
+  }
+}
+
+/**
  * @brief      Takes a string and parse it to a match struct
  *               - also it generates the accordently rounds array with total goals
  *
- * @param[in]  str        The string.
- * @param      *rounds    The array of rounds.
+ * @param      str     The string
+ * @param      *rounds The array of rounds.
+ * @param      *teams  The array of teams
  *
- * @return     The match struct.
+ * @return     { description_of_the_return_value }
  */
 match generateMatchFromStr(char *str, round *rounds, team *teams){
   match currentMatch;
@@ -253,8 +386,8 @@ match generateMatchFromStr(char *str, round *rounds, team *teams){
         &currentMatch.awayGoals,
         &attendances
   );
-  strcpy(currentMatch.attendances.teamname, homeTeam);
-  currentMatch.attendances.attendances = (attendances*1000);
+
+  currentMatch.attendances = (attendances*1000);
   /* Home team stat generate */
   currentMatch.homeTeam = findTeam(homeTeam, teams);
   strcpy(currentMatch.homeTeam->name, homeTeam);
@@ -266,7 +399,7 @@ match generateMatchFromStr(char *str, round *rounds, team *teams){
   currentMatch.homeTeam->homeWins += (currentMatch.homeGoals>currentMatch.awayGoals);
   currentMatch.homeTeam->homeLoses += (currentMatch.homeGoals<currentMatch.awayGoals);
   currentMatch.homeTeam->homeDraws += (currentMatch.homeGoals==currentMatch.awayGoals);
-  currentMatch.homeTeam->points += (currentMatch.homeGoals>currentMatch.awayGoals) ? 3 : (currentMatch.homeGoals==currentMatch.awayGoals) ? 1 : 0;
+  currentMatch.homeTeam->points += (currentMatch.homeGoals>currentMatch.awayGoals) ? WINPOINTS : (currentMatch.homeGoals==currentMatch.awayGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Away team stat generate */
   currentMatch.awayTeam = findTeam(awayTeam, teams);
   strcpy(currentMatch.awayTeam->name, awayTeam);
@@ -278,13 +411,41 @@ match generateMatchFromStr(char *str, round *rounds, team *teams){
   currentMatch.awayTeam->awayWins += (currentMatch.awayGoals>currentMatch.homeGoals);
   currentMatch.awayTeam->awayLoses += (currentMatch.awayGoals<currentMatch.homeGoals);
   currentMatch.awayTeam->awayDraws += (currentMatch.awayGoals==currentMatch.homeGoals);
-  currentMatch.awayTeam->points += (currentMatch.awayGoals>currentMatch.homeGoals) ? 3 : (currentMatch.awayGoals==currentMatch.homeGoals) ? 1 : 0;
+  currentMatch.awayTeam->points += (currentMatch.awayGoals>currentMatch.homeGoals) ? WINPOINTS : (currentMatch.awayGoals==currentMatch.homeGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Round stat generate */
   currentMatch.round = &rounds[(round-1)];
   currentMatch.round->round = round;
   currentMatch.round->goals += currentMatch.homeGoals+currentMatch.awayGoals;
   return currentMatch;
 }
+
+/**
+ * @brief      QSort compare function for showLeagueTable-function
+ */
+int sortForLeagueTable(const void * a, const void * b){
+  team *A = (team*) a;
+  team *B = (team*) b;
+  if(A->points > B->points){
+    return -1;
+  }else if(A->points < B->points){
+    return 1;
+  }else{
+    if((A->totalGoalsScored-A->totalGoalsConceded) > (B->totalGoalsScored-B->totalGoalsConceded)){
+      return -1;
+    }else if((A->totalGoalsScored-A->totalGoalsConceded) < (B->totalGoalsScored-B->totalGoalsConceded)){
+      return 1;
+    }else{
+      if(A->totalGoalsScored > B->totalGoalsScored){
+        return -1;
+      }else if(A->totalGoalsScored < B->totalGoalsScored){
+        return 1;
+      }else{
+        return strcasecmp(A->name, B->name);
+      }
+    }
+  }
+}
+
 /**
  * @brief      Finds and returns the array of matches that is played
  *             on the given weekday and from & to timestamp
@@ -300,6 +461,10 @@ match generateMatchFromStr(char *str, round *rounds, team *teams){
 match *findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, int *numOfFilteredMatches){
   match *resultArray = calloc(NUMOFTOTALMACHTES, sizeof(match));
   int i, numOfHits=0;
+  if (resultArray == NULL){
+    printf("%s", "Not enough ram, sorry..");
+    exit(EXIT_FAILURE);
+  }
   for(i=0; i < NUMOFTOTALMACHTES; i++){
     if(!strcasecmp(matches[i].weekDay,weekday) && matches[i].time.hours >= from.hours && matches[i].time.minutes >= from.minutes && matches[i].time.hours <= to.hours && matches[i].time.minutes <= to.minutes){
       resultArray[numOfHits] = matches[i];
@@ -310,6 +475,7 @@ match *findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches
   *numOfFilteredMatches = numOfHits;
   return resultArray;
 }
+
 /**
  * @brief      Finds the team with the lowest attendances in a given time span
  *
@@ -324,10 +490,14 @@ void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, 
   match *filteredMatches = filterMatchesByDate(from, to, matches, &numOfHits);
   spectator *filteredAttendences = calloc(NUMOFTEAMS, sizeof(spectator));
   spectator *current;
+  if (filteredAttendences == NULL){
+    printf("%s", "Not enough ram, sorry..");
+    exit(EXIT_FAILURE);
+  }
   for(i=0; i<numOfHits; i++){
       current = findSpectators(filteredMatches[i].homeTeam->name, filteredAttendences);
       strcpy(current->teamname, filteredMatches[i].homeTeam->name);
-      current->attendances += filteredMatches[i].attendances.attendances;
+      current->attendances += filteredMatches[i].attendances;
   }
   for(i=0; i<NUMOFTEAMS; i++){
     if(filteredAttendences[i].attendances < *attendances || *attendances == 0){
@@ -338,6 +508,7 @@ void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, 
   free(filteredAttendences);
   free(filteredMatches);
 }
+
 /**
  * @brief      Find the corosponding pointer in the attendances array,
  *             if not present returns the pointer to the next space in the array
@@ -360,6 +531,7 @@ spectator *findSpectators(char *teamName, spectator *attendances){
   }
   return &attendances[nextTick];
 }
+
 /**
  * @brief      filter an array of mathces by date.
  *
@@ -382,10 +554,11 @@ match *filterMatchesByDate(date from, date to, match *matches, int *resultNum){
           numOfHits++;
       }
   }
-  filteredMatches = (match*) realloc(filteredMatches, numOfHits*sizeof(match));
+  filteredMatches = realloc(filteredMatches, numOfHits*sizeof(match));
   *resultNum = numOfHits;
   return filteredMatches;
 }
+
 /**
  * @brief      Finds an array of the teams who dominated away games
  *
@@ -396,22 +569,22 @@ match *filterMatchesByDate(date from, date to, match *matches, int *resultNum){
  */
 team *findTeamsDominatingAway(team *teams, int *numOfTeamsDominatingAway){
   int i, numOfHits=0;
-  int *hits = calloc(NUMOFTEAMS, sizeof(int));
-  team *resultArray;
+  team *resultArray = calloc(NUMOFTEAMS, sizeof(team));;
+  if (resultArray == NULL){
+    printf("%s", "Not enough ram, sorry..");
+    exit(EXIT_FAILURE);
+  }
   for(i=0; i < NUMOFTEAMS; i++){
     if(teams[i].awayWins > teams[i].homeWins){
-        hits[numOfHits] = i;
+        resultArray[numOfHits] = teams[i];
         numOfHits++;
     }
   }
-  resultArray = calloc(numOfHits, sizeof(team));
-  for(i=0; i < numOfHits; i++){
-    resultArray[i] = teams[hits[i]];
-  }
-  free(hits);
+  resultArray = realloc(resultArray, numOfHits*sizeof(team));
   *numOfTeamsDominatingAway = numOfHits;
   return resultArray;
 }
+
 /**
  * @brief      Find the corosponding pointer in the team array,
  *             if not present returns the pointer to the next space in the array
@@ -434,6 +607,7 @@ team *findTeam(char *teamName, team *teams){
   }
   return &teams[nextTick];
 }
+
 /**
  * @brief      Takes an array of matches, searches for draws with the delimiter of total goals and returns an array pointer
  *
@@ -443,30 +617,22 @@ team *findTeam(char *teamName, team *teams){
  * @return     Returns the pointer to the resultArray containing all the hits.
  */
 match *findDrawsSearch(int goalDelimiter, match *matches){
-  int *hits = (int*) malloc(NUMOFTOTALMACHTES*sizeof(int));
-  match *returnArray;
+  match *returnArray = (match*) calloc(NUMOFTOTALMACHTES, sizeof(match));
   int i, numOfHits=0;
-  if (hits == NULL){
-    printf("%s", "Not enough ram, sorry..");
-    exit(EXIT_FAILURE);
-  }
-  for(i=0; i<NUMOFTOTALMACHTES; i++){
-    if(matches[i].homeGoals == matches[i].awayGoals && matches[i].homeGoals+matches[i].awayGoals==goalDelimiter){
-        hits[numOfHits] = i;
-        numOfHits++;
-    }
-  }
-  returnArray = (match*) malloc(numOfHits*sizeof(match));
   if (returnArray == NULL){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
   }
-  for(i=0; i<numOfHits; i++){
-    returnArray[i] = matches[hits[i]];
+  for(i=0; i<NUMOFTOTALMACHTES; i++){
+    if(matches[i].homeGoals == matches[i].awayGoals && matches[i].homeGoals+matches[i].awayGoals>=goalDelimiter){
+        returnArray[numOfHits] = matches[i];
+        numOfHits++;
+    }
   }
-  free(hits);
+  returnArray = (match*) realloc(returnArray, numOfHits*sizeof(match));
   return returnArray;
 }
+
 /**
  * @brief      Finds the first round with lesser total goals than the delimiter.
  *
