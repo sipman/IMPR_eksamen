@@ -63,12 +63,12 @@ void printAllMatches(match *matches, int numberOfMatches);
 match generateMatchFromStr(char *str, round *rounds, team *teams);
 int generateNumberOfRounds(int roundNumber, int currentRoundNumber);
 void copyTeamArray(team *dest, team *path);
-match *findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, int *numOfFilteredMatches);
+int findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, match **filteredMatches);
 int sortForLeagueTable(const void * a, const void * b);
 void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, date to, match *matches);
 spectator *findSpectators(char *teamName, spectator *attendances);
-match *filterMatchesByDate(date from, date to, match *matches, int *resultNum);
-team *findTeamsDominatingAway(team *teams, int *numOfTeamsDominatingAway);
+int filterMatchesByDate(date from, date to, match *matches, match **filteredMatches);
+int findTeamsDominatingAway(team *teams, team **teamsDominatingAway);
 team *findTeam(char *teamName, team *teams);
 int findDrawsSearch(int goalDelimiter, match *matches, match **draws);
 void findFirstRoundWithLesserGoals(int *resultRound, int *resultGoals, int goalDelimiter, round *rounds);
@@ -225,6 +225,7 @@ void showLeagueTable(team *teams){
       );
   }
   printf("-------------------------------------------------------\n");
+  free(leagueTable);
 }
 
 /**
@@ -242,7 +243,7 @@ void showMatchesFromAWeekDay(char *from, char *to, char *weekday, match *matches
   match *filteredMatches;
   sscanf(from, "%d:%d", &fromTimestamp.hours, &fromTimestamp.minutes);
   sscanf(to, "%d:%d", &toTimestamp.hours, &toTimestamp.minutes);
-  filteredMatches = findMatchesFromAWeekDay(fromTimestamp, toTimestamp, weekday, matches, &numOfFilteredMatches);
+  numOfFilteredMatches = findMatchesFromAWeekDay(fromTimestamp, toTimestamp, weekday, matches, &filteredMatches);
   printAllMatches(filteredMatches, numOfFilteredMatches);
   free(filteredMatches);
 }
@@ -280,7 +281,8 @@ void showTeamWithLowestAttendances(char *fromStr, char *toStr, match *matches){
  */
 void showTeamsDominatingAway(team *teams){
   int numOfTeamsDominatingAway, i;
-  team *teamsDominatingAway = findTeamsDominatingAway(teams, &numOfTeamsDominatingAway);
+  team *teamsDominatingAway;
+  numOfTeamsDominatingAway = findTeamsDominatingAway(teams, &teamsDominatingAway);
   for(i=0; i < numOfTeamsDominatingAway; i++){
     printf("%s with %d away wins against %d home wins\n", teamsDominatingAway[i].name, teamsDominatingAway[i].awayWins, teamsDominatingAway[i].homeWins);
   }
@@ -467,8 +469,8 @@ int sortForLeagueTable(const void * a, const void * b){
  *
  * @return     Pointer to the filtered array stored in the heap.
  */
-match *findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, int *numOfFilteredMatches){
-  match *resultArray = calloc(NUMOFTOTALMACHTES, sizeof(match));
+int findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, match **filteredMatches){
+  int *resultArray = calloc(NUMOFTOTALMACHTES, sizeof(int));
   int i, numOfHits=0;
   if (resultArray == NULL){
     printf("%s", "Not enough ram, sorry..");
@@ -476,13 +478,16 @@ match *findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches
   }
   for(i=0; i < NUMOFTOTALMACHTES; i++){
     if(!strcasecmp(matches[i].weekDay,weekday) && matches[i].time.hours >= from.hours && matches[i].time.minutes >= from.minutes && matches[i].time.hours <= to.hours && matches[i].time.minutes <= to.minutes){
-      resultArray[numOfHits] = matches[i];
+      resultArray[numOfHits] = i;
       numOfHits++;
     }
   }
-  resultArray = realloc(resultArray, numOfHits*sizeof(match));
-  *numOfFilteredMatches = numOfHits;
-  return resultArray;
+  *filteredMatches = calloc(numOfHits, sizeof(match));
+  for(i=0; i<numOfHits; i++){
+    (*filteredMatches)[i] = matches[resultArray[i]];
+  }
+  free(resultArray);
+  return numOfHits;
 }
 
 /**
@@ -495,8 +500,9 @@ match *findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches
  * @param      matches      The matches
  */
 void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, date to, match *matches){
-  int i, numOfHits;
-  match *filteredMatches = filterMatchesByDate(from, to, matches, &numOfHits);
+  int i;
+  match *filteredMatches;
+  int numOfHits = filterMatchesByDate(from, to, matches, &filteredMatches);
   spectator *filteredAttendences = calloc(NUMOFTEAMS, sizeof(spectator));
   spectator *current;
   if (filteredAttendences == NULL){
@@ -551,21 +557,24 @@ spectator *findSpectators(char *teamName, spectator *attendances){
  *
  * @return     Pointer to the filtered array in the heap
  */
-match *filterMatchesByDate(date from, date to, match *matches, int *resultNum){
+int filterMatchesByDate(date from, date to, match *matches, match **filteredMatches){
   int i, numOfHits=0;
-  match *filteredMatches = (match*) calloc(NUMOFTOTALMACHTES, sizeof(match));
-  if(filteredMatches == NULL){
+  int *returnArray = (int*) calloc(NUMOFTOTALMACHTES, sizeof(int));
+  if(returnArray == NULL){
     exit(EXIT_FAILURE);
   }
   for(i=0; i<NUMOFTOTALMACHTES; i++){
       if(matches[i].date.day >= from.day && matches[i].date.month >= from.month && matches[i].date.year >= from.year && matches[i].date.day <= to.day && matches[i].date.month <= to.month && matches[i].date.year <= to.year){
-          filteredMatches[numOfHits] = matches[i];
+          returnArray[numOfHits] = i;
           numOfHits++;
       }
   }
-  filteredMatches = realloc(filteredMatches, numOfHits*sizeof(match));
-  *resultNum = numOfHits;
-  return filteredMatches;
+  *filteredMatches = calloc(numOfHits,sizeof(match));
+  for(i=0; i<numOfHits; i++){
+    (*filteredMatches)[i] = matches[returnArray[i]];
+  }
+  free(returnArray);
+  return numOfHits;
 }
 
 /**
@@ -576,22 +585,25 @@ match *filterMatchesByDate(date from, date to, match *matches, int *resultNum){
  *
  * @return     A pointer to the array of the teams who wins more away than home games
  */
-team *findTeamsDominatingAway(team *teams, int *numOfTeamsDominatingAway){
+int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
   int i, numOfHits=0;
-  team *resultArray = calloc(NUMOFTEAMS, sizeof(team));;
+  int *resultArray = calloc(NUMOFTEAMS, sizeof(int));;
   if (resultArray == NULL){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
   }
   for(i=0; i < NUMOFTEAMS; i++){
     if(teams[i].awayWins > teams[i].homeWins){
-        resultArray[numOfHits] = teams[i];
+        resultArray[numOfHits] = i;
         numOfHits++;
     }
   }
-  resultArray = realloc(resultArray, numOfHits*sizeof(team));
-  *numOfTeamsDominatingAway = numOfHits;
-  return resultArray;
+  *teamsDominatingAway = calloc(numOfHits, sizeof(team));
+  for(i=0; i<numOfHits; i++){
+    (*teamsDominatingAway)[i] = teams[resultArray[i]];
+  }
+  free(resultArray);
+  return numOfHits;
 }
 
 /**
@@ -642,6 +654,7 @@ int findDrawsSearch(int goalDelimiter, match *matches, match **draws){
   for(i=0; i<numOfHits; i++){
     (*draws)[i] = matches[returnArray[i]];
   }
+  free(returnArray);
   return numOfHits;
 }
 
