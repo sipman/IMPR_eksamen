@@ -70,7 +70,7 @@ spectator *findSpectators(char *teamName, spectator *attendances);
 match *filterMatchesByDate(date from, date to, match *matches, int *resultNum);
 team *findTeamsDominatingAway(team *teams, int *numOfTeamsDominatingAway);
 team *findTeam(char *teamName, team *teams);
-match *findDrawsSearch(int goalDelimiter, match *matches);
+match *findDrawsSearch(int goalDelimiter, match *matches, int *numOfDraws);
 void findFirstRoundWithLesserGoals(int *resultRound, int *resultGoals, int goalDelimiter, round *rounds);
 
 int main(void){
@@ -90,6 +90,9 @@ int main(void){
   helpMessage();
   option = scanOption();
   runCommand(option, input, season, rounds, teams);
+  free(season);
+  free(rounds);
+  free(teams);
   return 0;
 }
 
@@ -299,11 +302,10 @@ void showARoundWithLesserGoals(int goalDelimiter, round *rounds){
  * @param[in]  *matches         The array of matches.
  */
 void showDrawMatches(int goalDelimiter, match *matches){
-  match *draws = findDrawsSearch(4, matches);
-  int i=0;
-  while(draws[i].round != 0){
+  int i, numOfDraws;
+  match *draws = findDrawsSearch(4, matches, &numOfDraws);
+  for(i=0; i < numOfDraws; i++){
     printAMatch(draws[i]);
-    i++;
   }
   free(draws);
 }
@@ -618,7 +620,7 @@ team *findTeam(char *teamName, team *teams){
  *
  * @return     Returns the pointer to the resultArray containing all the hits.
  */
-match *findDrawsSearch(int goalDelimiter, match *matches){
+match *findDrawsSearch(int goalDelimiter, match *matches, int *numOfDraws){
   match *returnArray = (match*) calloc(NUMOFTOTALMACHTES, sizeof(match));
   int i, numOfHits=0;
   if (returnArray == NULL){
@@ -632,6 +634,7 @@ match *findDrawsSearch(int goalDelimiter, match *matches){
     }
   }
   returnArray = (match*) realloc(returnArray, numOfHits*sizeof(match));
+  *numOfDraws = numOfHits;
   return returnArray;
 }
 
