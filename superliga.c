@@ -70,7 +70,7 @@ spectator *findSpectators(char *teamName, spectator *attendances);
 match *filterMatchesByDate(date from, date to, match *matches, int *resultNum);
 team *findTeamsDominatingAway(team *teams, int *numOfTeamsDominatingAway);
 team *findTeam(char *teamName, team *teams);
-match *findDrawsSearch(int goalDelimiter, match *matches, int *numOfDraws);
+int findDrawsSearch(int goalDelimiter, match *matches, match **draws);
 void findFirstRoundWithLesserGoals(int *resultRound, int *resultGoals, int goalDelimiter, round *rounds);
 
 int main(void){
@@ -306,8 +306,9 @@ void showARoundWithLesserGoals(int goalDelimiter, round *rounds){
  * @param[in]  *matches         The array of matches.
  */
 void showDrawMatches(int goalDelimiter, match *matches){
-  int i, numOfDraws;
-  match *draws = findDrawsSearch(4, matches, &numOfDraws);
+  int i;
+  match *draws;
+  int numOfDraws = findDrawsSearch(4, matches, &draws);
   for(i=0; i < numOfDraws; i++){
     printAMatch(draws[i]);
   }
@@ -624,8 +625,8 @@ team *findTeam(char *teamName, team *teams){
  *
  * @return     Returns the pointer to the resultArray containing all the hits.
  */
-match *findDrawsSearch(int goalDelimiter, match *matches, int *numOfDraws){
-  match *returnArray = (match*) calloc(NUMOFTOTALMACHTES, sizeof(match));
+int findDrawsSearch(int goalDelimiter, match *matches, match **draws){
+  int *returnArray = (int*) calloc(NUMOFTOTALMACHTES, sizeof(int));
   int i, numOfHits=0;
   if (returnArray == NULL){
     printf("%s", "Not enough ram, sorry..");
@@ -633,13 +634,15 @@ match *findDrawsSearch(int goalDelimiter, match *matches, int *numOfDraws){
   }
   for(i=0; i<NUMOFTOTALMACHTES; i++){
     if(matches[i].homeGoals == matches[i].awayGoals && matches[i].homeGoals+matches[i].awayGoals>=goalDelimiter){
-        returnArray[numOfHits] = matches[i];
+        returnArray[numOfHits] = i;
         numOfHits++;
     }
   }
-  returnArray = (match*) realloc(returnArray, numOfHits*sizeof(match));
-  *numOfDraws = numOfHits;
-  return returnArray;
+  *draws = (match*) calloc(numOfHits, sizeof(match));
+  for(i=0; i<numOfHits; i++){
+    (*draws)[i] = matches[returnArray[i]];
+  }
+  return numOfHits;
 }
 
 /**
