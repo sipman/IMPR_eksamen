@@ -571,7 +571,7 @@ int filterMatchesByDate(date from, date to, match *matches, match **filteredMatc
  */
 int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
   int i, numOfHits=0;
-  int *resultArray = malloc(NUMOFTEAMS*sizeof(int));;
+  int *resultArray = calloc(NUMOFTEAMS, sizeof(int));;
   if (resultArray == NULL){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
@@ -582,7 +582,7 @@ int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
         numOfHits++;
     }
   }
-  *teamsDominatingAway = malloc(numOfHits*sizeof(team));
+  *teamsDominatingAway = calloc(numOfHits, sizeof(team));
   for(i=0; i<numOfHits; i++){
     (*teamsDominatingAway)[i] = teams[resultArray[i]];
   }
@@ -631,7 +631,7 @@ int findDrawsSearch(int goalDelimiter, match *matches, match **draws){
         numOfHits++;
     }
   }
-  *draws = (match*) malloc(numOfHits*sizeof(match));
+  *draws = (match*) calloc(numOfHits, sizeof(match));
   for(i=0; i<numOfHits; i++){
     (*draws)[i] = matches[returnArray[i]];
   }
