@@ -401,7 +401,6 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGener
   /* Home team stat generate */
   homeTeamKey = findTeam(homeTeam, teams, numOfGeneratedTeams);
   destination->homeTeam = homeTeamKey;
-  strcpy(teams[homeTeamKey].name, homeTeam);
   teams[homeTeamKey].totalGoalsScored += destination->homeGoals;
   /*teams[homeTeamKey].totalMatches += 1;
   teams[homeTeamKey].totalGoalsConceded += destination->awayGoals;
@@ -413,8 +412,7 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGener
   /* Away team stat generate */
   awayTeamKey = findTeam(awayTeam, teams, numOfGeneratedTeams);
   destination->awayTeam =  awayTeamKey;
-    strcpy(teams[awayTeamKey].name, awayTeam);
-   teams[awayTeamKey].totalGoalsScored += destination->awayGoals;
+  teams[awayTeamKey].totalGoalsScored += destination->awayGoals;
   /*teams[awayTeamKey].totalMatches += 1;
   teams[awayTeamKey].totalGoalsConceded += destination->homeGoals;
   teams[awayTeamKey].totalWins += (destination->awayGoals>destination->homeGoals);
@@ -612,16 +610,14 @@ int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
  * @return     A pointer to the correct placement of the teamName
  */
 int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams){
-  /*int i, nextTick=0;
-  for(i=0; i<*numOfGeneratedTeams; i++){
-    if(strcmp(teams[i].name, teamName)==0){
+  int i, nextTick=*numOfGeneratedTeams;
+  for(i=0; i<NUMOFTEAMS; i++){
+    if(strcmp(teams[i].name, teamName)==0)
       return i;
-    }
-    nextTick++;
   }
+    strcpy(teams[nextTick].name, teamName);
     *numOfGeneratedTeams +=1;
-    return nextTick;*/
-  return 0;
+    return nextTick;
 }
 
 /**
