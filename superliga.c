@@ -651,6 +651,7 @@ int findDrawsSearch(int goalDelimiter, match *matches, match **draws){
 void findFirstRoundWithLesserGoals(int *resultRound, int *resultGoals, int goalDelimiter, round *rounds){
   int i;
   for(i=0; i<NUMOFROUNDS; i++){
+      printf("%d: %d\n", rounds[i].round, rounds[i].goals);
       if(rounds[i].goals < goalDelimiter){
         *resultRound = rounds[i].round;
         *resultGoals = rounds[i].goals;
