@@ -444,7 +444,7 @@ int sortForLeagueTable(const void * a, const void * b){
       }else if(A->totalGoalsScored < B->totalGoalsScored){
         return 1;
       }else{
-        return strcasecmp(A->name, B->name);
+        return strcmp(A->name, B->name);
       }
     }
   }
