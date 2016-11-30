@@ -82,6 +82,8 @@ int main(void){
     exit(EXIT_FAILURE);
   }
    for(i=0; i<NUMOFTEAMS; i++){
+    memset(teams[i].name);
+    memset(teams[i].totalGoalsScored);
     printf("Team: %s, Goals: %d\n", teams[i].name, teams[i].totalGoalsScored);
   }
   prepareData(&season, &rounds, teams, &numOfGeneratedTeams, input);
