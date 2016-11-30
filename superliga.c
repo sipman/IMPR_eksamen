@@ -70,7 +70,7 @@ int main(void){
   FILE *input = fopen(SOURCEFILE, "r");
   match *season = malloc(NUMOFTOTALMACHTES*sizeof(match));
   round *rounds = malloc(NUMOFROUNDS*sizeof(rounds));
-  team  *teams = malloc(NUMOFTEAMS*sizeof(team));
+  team  *teams = calloc(NUMOFTEAMS,sizeof(team));
   int option, numOfGeneratedTeams=0, i;
 
   if(input == NULL){
@@ -82,8 +82,6 @@ int main(void){
     exit(EXIT_FAILURE);
   }
    for(i=0; i<NUMOFTEAMS; i++){
-    memset(teams[i].name);
-    memset(teams[i].totalGoalsScored);
     printf("Team: %s, Goals: %d\n", teams[i].name, teams[i].totalGoalsScored);
   }
   prepareData(&season, &rounds, teams, &numOfGeneratedTeams, input);
