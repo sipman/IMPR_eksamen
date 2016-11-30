@@ -70,33 +70,31 @@ int main(void){
   FILE *input = fopen(SOURCEFILE, "r");
   match *season = malloc(NUMOFTOTALMACHTES*sizeof(match));
   round *rounds = malloc(NUMOFROUNDS*sizeof(rounds));
-  team  teams[NUMOFTEAMS];
-  int option, numOfGeneratedTeams;
+  team  *teams = malloc(NUMOFTEAMS*sizeof(team));
+  int option, numOfGeneratedTeams=0, i;
 
   if(input == NULL){
     printf("File not found...\n");
     exit(EXIT_FAILURE);
   }
-  if (season == NULL || rounds == NULL){
+  if (season == NULL || rounds == NULL || teams == NULL){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
   }
-  char *str = (char*) malloc(MAXLINELENGTH*sizeof(char));
-  int i=0;
-  while (fgets(str, MAXLINELENGTH, input)) {
-    generateMatchFromStr(str, rounds, teams, &numOfGeneratedTeams, &season[i]);
-    i++;
-  }
-  free(str);
-  /*prepareData(&season, &rounds, teams, &numOfGeneratedTeams, input);*/
+  prepareData(&season, &rounds, teams, &numOfGeneratedTeams, input);
   fclose(input);
-  printAllMatches(season, NUMOFTOTALMACHTES);
-  /*welcomeMessage();
+  printf("Amount of teams: %d\n", numOfGeneratedTeams);
+  for(i=0; i<numOfGeneratedTeams; i++){
+    printf("Team: %s, Goals: %d\n", teams[i].name, teams[i].totalGoalsScored);
+  }
+  /*printAllMatches(season, NUMOFTOTALMACHTES);
+  welcomeMessage();
   helpMessage();
   option = scanOption();
   runCommand(option, input, season, rounds, teams);*/
   free(season);
   free(rounds);
+  free(teams);
   return 0;
 }
 
@@ -401,7 +399,6 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGener
   /* Home team stat generate */
   homeTeamKey = findTeam(homeTeam, teams, numOfGeneratedTeams);
   destination->homeTeam = homeTeamKey;
-  strcpy(teams[homeTeamKey].name, homeTeam);
   teams[homeTeamKey].totalMatches += 1;
   teams[homeTeamKey].totalGoalsScored += destination->homeGoals;
   teams[homeTeamKey].totalGoalsConceded += destination->awayGoals;
@@ -413,7 +410,6 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGener
   /* Away team stat generate */
   awayTeamKey = findTeam(awayTeam, teams, numOfGeneratedTeams);
   destination->awayTeam =  awayTeamKey;
-  strcpy(teams[awayTeamKey].name, awayTeam);
   teams[awayTeamKey].totalMatches += 1;
   teams[awayTeamKey].totalGoalsScored += destination->awayGoals;
   teams[awayTeamKey].totalGoalsConceded += destination->homeGoals;
@@ -616,9 +612,9 @@ int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams){
     if(strcmp(teams[i].name, teamName)==0)
       return i;
   }
-    strcpy(teams[i+1].name, teamName);
-    *numOfGeneratedTeams += 1;
-    return i+1;
+    strcpy(teams[*numOfGeneratedTeams].name, teamName);
+    *numOfGeneratedTeams +=1;
+    return (*numOfGeneratedTeams-1);
 }
 
 /**
