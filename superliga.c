@@ -38,6 +38,7 @@ typedef struct match{
   int homeGoals, awayGoals;
   int attendances;
 } match;
+
 void prepareData(match **matches, round **rounds, team *teams, int *numOfGeneratedTeams, FILE *inputFile);
 void welcomeMessage();
 void helpMessage();
@@ -79,9 +80,6 @@ int main(void){
   if (season == NULL || rounds == NULL || teams == NULL){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
-  }
-   for(i=0; i<NUMOFTEAMS; i++){
-    printf("Team: %s, Goals: %d\n", teams[i].name, teams[i].totalGoalsScored);
   }
   prepareData(&season, &rounds, teams, &numOfGeneratedTeams, input);
   fclose(input);
