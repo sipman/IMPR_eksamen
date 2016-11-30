@@ -81,6 +81,9 @@ int main(void){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
   }
+   for(i=0; i<NUMOFTEAMS; i++){
+    printf("Team: %s, Goals: %d\n", teams[i].name, teams[i].totalGoalsScored);
+  }
   prepareData(&season, &rounds, teams, &numOfGeneratedTeams, input);
   fclose(input);
   printf("Amount of teams: %d\n", numOfGeneratedTeams);
@@ -421,7 +424,7 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGener
   /* Round stat generate */
   rounds[(destination->round-1)].round=destination->round;
   rounds[(destination->round-1)].goals+=destination->homeGoals+destination->awayGoals;
-  printAMatch(*destination);
+  /*printAMatch(*destination);*/
 }
 /**
  * @brief      QSort compare function for showLeagueTable-function
