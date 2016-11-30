@@ -34,7 +34,7 @@ typedef struct match{
   char weekDay[WEEKDAYBUFFER];
   date date;
   time time;
-  int homeTeam, awayTeam;
+  char homeTeam[TEAMNAMEBUFFER], awayTeam[TEAMNAMEBUFFER];
   int homeGoals, awayGoals;
   int attendances;
 } match;
@@ -71,7 +71,7 @@ int main(void){
   match *season = malloc(NUMOFTOTALMACHTES*sizeof(match));
   round *rounds = malloc(NUMOFROUNDS*sizeof(rounds));
   team  *teams = calloc(NUMOFTEAMS,sizeof(team));
-  int option, numOfGeneratedTeams=0, i;
+  int option, numOfGeneratedTeams=0;
 
   if(input == NULL){
     printf("File not found...\n");
@@ -83,15 +83,10 @@ int main(void){
   }
   prepareData(&season, &rounds, teams, &numOfGeneratedTeams, input);
   fclose(input);
-  printf("Amount of teams: %d\n", numOfGeneratedTeams);
-  for(i=0; i<numOfGeneratedTeams; i++){
-    printf("Team: %s, Goals: %d\n", teams[i].name, teams[i].totalGoalsScored);
-  }
-  /*printAllMatches(season, NUMOFTOTALMACHTES);
   welcomeMessage();
   helpMessage();
   option = scanOption();
-  runCommand(option, input, season, rounds, teams);*/
+  runCommand(option, input, season, rounds, teams);
   free(season);
   free(rounds);
   free(teams);
@@ -320,7 +315,7 @@ void showDrawMatches(int goalDelimiter, match *matches){
  * @param[in]  match  The match that is desired printed
  */
 void printAMatch(match match){
-  printf("R%-2d\t%s\t%02d/%02d/%d\t%02d:%02d\t%-3d - %-3d\t%d-%d\t%d\n",
+  printf("R%-2d\t%s\t%02d/%02d/%d\t%02d:%02d\t%-3s - %-3s\t%d-%d\t%d\n",
         match.round,
         match.weekDay,
         match.date.day,
@@ -377,8 +372,7 @@ void copyTeamArray(team *dest, team *path){
  */
 void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGeneratedTeams, match *destination){
   double attendances = 0;
-  int homeTeamKey, awayTeamKey;
-  char homeTeam[TEAMNAMEBUFFER], awayTeam[TEAMNAMEBUFFER];
+  int homeTeamKey, awayTeamKey, roundsKey;
   sscanf(str, " R%02d %s %d/%d/%d %d.%d %s - %s %d - %d %lf",
         &destination->round,
         destination->weekDay,
@@ -387,8 +381,8 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGener
         &destination->date.year,
         &destination->time.hours,
         &destination->time.minutes,
-        homeTeam,
-        awayTeam,
+        destination->homeTeam,
+        destination->awayTeam,
         &destination->homeGoals,
         &destination->awayGoals,
         &attendances
@@ -396,8 +390,7 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGener
 
   destination->attendances = (attendances*1000);
   /* Home team stat generate */
-  homeTeamKey = findTeam(homeTeam, teams, numOfGeneratedTeams);
-  destination->homeTeam = homeTeamKey;
+  homeTeamKey = findTeam(destination->homeTeam, teams, numOfGeneratedTeams);
   teams[homeTeamKey].totalGoalsScored += destination->homeGoals;
   teams[homeTeamKey].totalMatches += 1;
   teams[homeTeamKey].totalGoalsConceded += destination->awayGoals;
@@ -407,8 +400,7 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGener
   teams[homeTeamKey].homeWins += (destination->homeGoals>destination->awayGoals);
   teams[homeTeamKey].points += (destination->homeGoals>destination->awayGoals) ? WINPOINTS : (destination->homeGoals==destination->awayGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Away team stat generate */
-  awayTeamKey = findTeam(awayTeam, teams, numOfGeneratedTeams);
-  destination->awayTeam =  awayTeamKey;
+  awayTeamKey = findTeam(destination->awayTeam, teams, numOfGeneratedTeams);
   teams[awayTeamKey].totalGoalsScored += destination->awayGoals;
   teams[awayTeamKey].totalMatches += 1;
   teams[awayTeamKey].totalGoalsConceded += destination->homeGoals;
@@ -501,17 +493,18 @@ void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, 
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
   }
-  /*for(i=0; i<numOfHits; i++){
-      currentKey = findSpectators(filteredMatches[i].homeTeam->name, filteredAttendences);
-      strcpy(filteredAttendences[currentKey].teamname, filteredMatches[i].homeTeam->name);
+  for(i=0; i<numOfHits; i++){
+      currentKey = findSpectators(filteredMatches[i].homeTeam, filteredAttendences);
+      strcpy(filteredAttendences[currentKey].teamname, filteredMatches[i].homeTeam);
       filteredAttendences[currentKey].attendances += filteredMatches[i].attendances;
   }
+
   for(i=0; i<NUMOFTEAMS; i++){
     if(filteredAttendences[i].attendances < *attendances || *attendances == 0){
           *attendances = filteredAttendences[i].attendances;
           strcpy(teamname, filteredAttendences[i].teamname);
       }
-  }*/
+  }
   free(filteredAttendences);
   free(filteredMatches);
 }
@@ -565,6 +558,7 @@ int filterMatchesByDate(date from, date to, match *matches, match **filteredMatc
   for(i=0; i<numOfHits; i++){
     (*filteredMatches)[i] = matches[returnArray[i]];
   }
+  printAllMatches(*filteredMatches, numOfHits);
   free(returnArray);
   return numOfHits;
 }
