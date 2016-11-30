@@ -394,7 +394,7 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, match *destinat
   /* Home team stat generate */
   homeTeamKey = findTeam(homeTeam, teams);
   destination->homeTeam = homeTeamKey;
-  /*strcpy(teams[homeTeamKey].name, homeTeam);
+  strcpy(teams[homeTeamKey].name, homeTeam);
   teams[homeTeamKey].totalMatches += 1;
   teams[homeTeamKey].totalGoalsScored += destination->homeGoals;
   teams[homeTeamKey].totalGoalsConceded += destination->awayGoals;
@@ -402,11 +402,11 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, match *destinat
   teams[homeTeamKey].totalDraws += (destination->homeGoals==destination->awayGoals);
   teams[homeTeamKey].totalLoses += (destination->homeGoals<destination->awayGoals);
   teams[homeTeamKey].homeWins += (destination->homeGoals>destination->awayGoals);
-  teams[homeTeamKey].points += (destination->homeGoals>destination->awayGoals) ? WINPOINTS : (destination->homeGoals==destination->awayGoals) ? DRAWPOINTS : LOOSEPOINTS;*/
+  teams[homeTeamKey].points += (destination->homeGoals>destination->awayGoals) ? WINPOINTS : (destination->homeGoals==destination->awayGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Away team stat generate */
   awayTeamKey = findTeam(awayTeam, teams);
   destination->awayTeam =  awayTeamKey;
-  /*strcpy(teams[awayTeamKey].name, awayTeam);
+  strcpy(teams[awayTeamKey].name, awayTeam);
   teams[awayTeamKey].totalMatches += 1;
   teams[awayTeamKey].totalGoalsScored += destination->awayGoals;
   teams[awayTeamKey].totalGoalsConceded += destination->homeGoals;
@@ -414,7 +414,7 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, match *destinat
   teams[awayTeamKey].totalDraws += (destination->awayGoals==destination->homeGoals);
   teams[awayTeamKey].totalLoses += (destination->awayGoals<destination->homeGoals);
   teams[awayTeamKey].awayWins += (destination->awayGoals>destination->homeGoals);
-  teams[awayTeamKey].points += (destination->awayGoals>destination->homeGoals) ? WINPOINTS : (destination->awayGoals==destination->homeGoals) ? DRAWPOINTS : LOOSEPOINTS;*/
+  teams[awayTeamKey].points += (destination->awayGoals>destination->homeGoals) ? WINPOINTS : (destination->awayGoals==destination->homeGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Round stat generate */
   rounds[(destination->round-1)].round=destination->round;
   rounds[(destination->round-1)].goals+=destination->homeGoals+destination->awayGoals;
