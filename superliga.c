@@ -544,7 +544,7 @@ int findSpectators(char *teamName, spectator *attendances){
  */
 int filterMatchesByDate(date from, date to, match *matches, match **filteredMatches){
   int i, numOfHits=0;
-  int *returnArray = (int*) malloc(NUMOFTOTALMACHTES*sizeof(int));
+  int *returnArray = (int*) calloc(NUMOFTOTALMACHTES,sizeof(int));
   if(returnArray == NULL){
     exit(EXIT_FAILURE);
   }
@@ -554,7 +554,7 @@ int filterMatchesByDate(date from, date to, match *matches, match **filteredMatc
           numOfHits++;
       }
   }
-  *filteredMatches = malloc(numOfHits*sizeof(match));
+  *filteredMatches = calloc(numOfHits, sizeof(match));
   for(i=0; i<numOfHits; i++){
     (*filteredMatches)[i] = matches[returnArray[i]];
   }
