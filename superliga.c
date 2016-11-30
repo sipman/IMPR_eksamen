@@ -82,8 +82,8 @@ int main(void){
   }
   prepareData(&season, &rounds, &teams, input);
   fclose(input);
-  printAllMatches(season, NUMOFTOTALMACHTES);
-  /*welcomeMessage();
+  /*printAllMatches(season, NUMOFTOTALMACHTES);
+  welcomeMessage();
   helpMessage();
   option = scanOption();
   runCommand(option, input, season, rounds, teams);*/
@@ -606,6 +606,7 @@ int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
 int findTeam(char *teamName, team *teams){
   int i=0, found=0, nextTick=-1;
   while(!found && i < NUMOFTEAMS){
+      printf("%s == %s = %d\n", teamName, teams[i].name, strcmp(teams[i].name, teamName));
     if(!strcmp(teams[i].name, teamName)){
         found = 1;
         return i;
@@ -614,7 +615,7 @@ int findTeam(char *teamName, team *teams){
     }
     i++;
   }
-  return nextTick;
+    return nextTick;
 }
 
 /**
