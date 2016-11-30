@@ -25,14 +25,6 @@ typedef struct round{
 typedef struct team{
   char name[TEAMNAMEBUFFER];
   int totalMatches, totalWins, totalDraws, totalLoses, totalGoalsScored, totalGoalsConceded, awayWins, homeWins, points;
-  /*int awayMatches, homeMatches,
-      awayWins, homeWins,
-      awayLoses, homeLoses,
-      awayDraws, homeDraws,
-      totalGoalsScored, totalGoalsConceded,
-      awayGoalsScored, homeGoalsScored,
-      awayGoalsConceded, homeGoalsConceded,
-      points;*/
 } team;
 typedef struct spectator{
   char teamname[TEAMNAMEBUFFER];
@@ -67,10 +59,10 @@ void copyTeamArray(team *dest, team *path);
 int findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, match **filteredMatches);
 int sortForLeagueTable(const void * a, const void * b);
 void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, date to, match *matches);
-spectator *findSpectators(char *teamName, spectator *attendances);
+int findSpectators(char *teamName, spectator *attendances);
 int filterMatchesByDate(date from, date to, match *matches, match **filteredMatches);
 int findTeamsDominatingAway(team *teams, team **teamsDominatingAway);
-team *findTeam(char *teamName, team *teams);
+int findTeam(char *teamName, team *teams);
 int findDrawsSearch(int goalDelimiter, match *matches, match **draws);
 void findFirstRoundWithLesserGoals(int *resultRound, int *resultGoals, int goalDelimiter, round *rounds);
 
@@ -380,7 +372,7 @@ void copyTeamArray(team *dest, team *path){
  */
 void generateMatchFromStr(char *str, round *rounds, team *teams, match *destination){
   double attendances = 0;
-  int round;
+  int round, homeTeamKey, awayTeamKey;
   char homeTeam[TEAMNAMEBUFFER], awayTeam[TEAMNAMEBUFFER];
   sscanf(str, " R%02d %s %d/%d/%d %d.%d %s - %s %d - %d %lf",
         &round,
@@ -399,27 +391,29 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, match *destinat
 
   destination->attendances = (attendances*1000);
   /* Home team stat generate */
-  destination->homeTeam = findTeam(homeTeam, teams);
-  strcpy(destination->homeTeam->name, homeTeam);
-  destination->homeTeam->totalMatches += 1;
-  destination->homeTeam->totalGoalsScored += destination->homeGoals;
-  destination->homeTeam->totalGoalsConceded += destination->awayGoals;
-  destination->homeTeam->totalWins += (destination->homeGoals>destination->awayGoals);
-  destination->homeTeam->totalDraws += (destination->homeGoals==destination->awayGoals);
-  destination->homeTeam->totalLoses += (destination->homeGoals<destination->awayGoals);
-  destination->homeTeam->homeWins += (destination->homeGoals>destination->awayGoals);
-  destination->homeTeam->points += (destination->homeGoals>destination->awayGoals) ? WINPOINTS : (destination->homeGoals==destination->awayGoals) ? DRAWPOINTS : LOOSEPOINTS;
+  homeTeamKey = findTeam(homeTeam, teams);
+  destination->homeTeam = &teams[homeTeamKey];
+  strcpy(teams[homeTeamKey].name, homeTeam);
+  teams[homeTeamKey].totalMatches += 1;
+  teams[homeTeamKey].totalGoalsScored += destination->homeGoals;
+  teams[homeTeamKey].totalGoalsConceded += destination->awayGoals;
+  teams[homeTeamKey].totalWins += (destination->homeGoals>destination->awayGoals);
+  teams[homeTeamKey].totalDraws += (destination->homeGoals==destination->awayGoals);
+  teams[homeTeamKey].totalLoses += (destination->homeGoals<destination->awayGoals);
+  teams[homeTeamKey].homeWins += (destination->homeGoals>destination->awayGoals);
+  teams[homeTeamKey].points += (destination->homeGoals>destination->awayGoals) ? WINPOINTS : (destination->homeGoals==destination->awayGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Away team stat generate */
-  destination->awayTeam = findTeam(awayTeam, teams);
-  strcpy(destination->awayTeam->name, awayTeam);
-  destination->awayTeam->totalMatches += 1;
-  destination->awayTeam->totalGoalsScored += destination->awayGoals;
-  destination->awayTeam->totalGoalsConceded += destination->homeGoals;
-  destination->awayTeam->totalWins += (destination->awayGoals>destination->homeGoals);
-  destination->awayTeam->totalDraws += (destination->awayGoals==destination->homeGoals);
-  destination->awayTeam->totalLoses += (destination->awayGoals<destination->homeGoals);
-  destination->awayTeam->awayWins += (destination->awayGoals>destination->homeGoals);
-  destination->awayTeam->points += (destination->awayGoals>destination->homeGoals) ? WINPOINTS : (destination->awayGoals==destination->homeGoals) ? DRAWPOINTS : LOOSEPOINTS;
+  awayTeamKey = findTeam(awayTeam, teams);
+  destination->awayTeam =  &teams[awayTeamKey];
+  strcpy(teams[awayTeamKey].name, awayTeam);
+  teams[awayTeamKey].totalMatches += 1;
+  teams[awayTeamKey].totalGoalsScored += destination->awayGoals;
+  teams[awayTeamKey].totalGoalsConceded += destination->homeGoals;
+  teams[awayTeamKey].totalWins += (destination->awayGoals>destination->homeGoals);
+  teams[awayTeamKey].totalDraws += (destination->awayGoals==destination->homeGoals);
+  teams[awayTeamKey].totalLoses += (destination->awayGoals<destination->homeGoals);
+  teams[awayTeamKey].awayWins += (destination->awayGoals>destination->homeGoals);
+  teams[awayTeamKey].points += (destination->awayGoals>destination->homeGoals) ? WINPOINTS : (destination->awayGoals==destination->homeGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Round stat generate */
   destination->round = &rounds[(round-1)];
   destination->round->round = round;
@@ -495,19 +489,18 @@ int findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, m
  * @param      matches      The matches
  */
 void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, date to, match *matches){
-  int i;
+  int i, currentKey;
   match *filteredMatches;
   int numOfHits = filterMatchesByDate(from, to, matches, &filteredMatches);
   spectator *filteredAttendences = malloc(NUMOFTEAMS*sizeof(spectator));
-  spectator *current;
   if (filteredAttendences == NULL){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
   }
   for(i=0; i<numOfHits; i++){
-      current = findSpectators(filteredMatches[i].homeTeam->name, filteredAttendences);
-      strcpy(current->teamname, filteredMatches[i].homeTeam->name);
-      current->attendances += filteredMatches[i].attendances;
+      currentKey = findSpectators(filteredMatches[i].homeTeam->name, filteredAttendences);
+      strcpy(filteredAttendences[currentKey].teamname, filteredMatches[i].homeTeam->name);
+      filteredAttendences[currentKey].attendances += filteredMatches[i].attendances;
   }
   for(i=0; i<NUMOFTEAMS; i++){
     if(filteredAttendences[i].attendances < *attendances || *attendances == 0){
@@ -528,18 +521,18 @@ void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, 
  *
  * @return     A pointer to the correct placement of the teamName
  */
-spectator *findSpectators(char *teamName, spectator *attendances){
+int findSpectators(char *teamName, spectator *attendances){
   int i=0, found=0, nextTick=-1;
   while(!found && i < NUMOFTEAMS){
     if(!strcmp(attendances[i].teamname, teamName)){
         found = 1;
-        return &attendances[i];
+        return i;
     }else if(nextTick == -1 && strlen(attendances[i].teamname) == 0){
         nextTick = i;
     }
     i++;
   }
-  return &attendances[nextTick];
+  return nextTick;
 }
 
 /**
@@ -610,18 +603,18 @@ int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
  *
  * @return     A pointer to the correct placement of the teamName
  */
-team *findTeam(char *teamName, team *teams){
+int findTeam(char *teamName, team *teams){
   int i=0, found=0, nextTick=-1;
   while(!found && i < NUMOFTEAMS){
     if(!strcmp(teams[i].name, teamName)){
         found = 1;
-        return &teams[i];
+        return i;
     }else if(nextTick == -1 && strlen(teams[i].name) == 0){
         nextTick = i;
     }
     i++;
   }
-  return &teams[nextTick];
+  return nextTick;
 }
 
 /**
