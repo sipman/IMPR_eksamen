@@ -70,7 +70,7 @@ int main(void){
   FILE *input = fopen(SOURCEFILE, "r");
   match *season = malloc(NUMOFTOTALMACHTES*sizeof(match));
   round *rounds = malloc(NUMOFROUNDS*sizeof(rounds));
-  team  *teams = malloc(NUMOFTEAMS*sizeof(team));
+  team  teams[NUMOFTEAMS];
   int option, numOfGeneratedTeams;
 
   if(input == NULL){
@@ -90,7 +90,6 @@ int main(void){
   runCommand(option, input, season, rounds, teams);*/
   free(season);
   free(rounds);
-  free(teams);
   return 0;
 }
 
