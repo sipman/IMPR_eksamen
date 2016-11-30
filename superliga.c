@@ -470,7 +470,7 @@ int findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, m
     exit(EXIT_FAILURE);
   }
   for(i=0; i < NUMOFTOTALMACHTES; i++){
-    if(!strcasecmp(matches[i].weekDay,weekday) && matches[i].time.hours >= from.hours && matches[i].time.minutes >= from.minutes && matches[i].time.hours <= to.hours && matches[i].time.minutes <= to.minutes){
+    if(!strcmp(matches[i].weekDay,weekday) && matches[i].time.hours >= from.hours && matches[i].time.minutes >= from.minutes && matches[i].time.hours <= to.hours && matches[i].time.minutes <= to.minutes){
       resultArray[numOfHits] = i;
       numOfHits++;
     }
