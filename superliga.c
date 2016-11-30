@@ -111,13 +111,12 @@ int main(void){
  * @param      inputFile  The input file
  */
 void prepareData(match **matches, round **rounds, team *teams, int *numOfGeneratedTeams,  FILE *inputFile){
-  char *str = (char*) malloc(MAXLINELENGTH*sizeof(char));
+  char str[MAXLINELENGTH];
   int i=0;
   while (fgets(str, MAXLINELENGTH, inputFile)) {
     generateMatchFromStr(str, *rounds, teams, numOfGeneratedTeams, &(*matches)[i]);
     i++;
   }
-  free(str);
 }
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -409,7 +408,6 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGener
   teams[homeTeamKey].points += (destination->homeGoals>destination->awayGoals) ? WINPOINTS : (destination->homeGoals==destination->awayGoals) ? DRAWPOINTS : LOOSEPOINTS;*/
   /* Away team stat generate */
   awayTeamKey = findTeam(awayTeam, teams, numOfGeneratedTeams);
-  printf("%s\n", teams[awayTeamKey].name);
   destination->awayTeam =  awayTeamKey;
   teams[awayTeamKey].totalGoalsScored += destination->awayGoals;
   /*teams[awayTeamKey].totalMatches += 1;
