@@ -613,6 +613,7 @@ int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
 int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams){
   int i, nextTick=0;
   for(i=0; i<*numOfGeneratedTeams; i++){
+      printf("TeamName: %s team[%d].name: %s\n", teamName, i, teams[i].name);
     if(strcmp(teams[i].name, teamName)==0){
       return i;
     }
