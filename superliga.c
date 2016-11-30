@@ -169,7 +169,7 @@ int runCommand(int option, FILE *input, match *season, round *rounds, team *team
         showTeamWithLowestAttendances("1/1/2015", "31/12/2015", season);
     break;
     case 5:
-        showMatchesFromAWeekDay("08:00", "22:30", "lor", season);
+        showMatchesFromAWeekDay("08:00", "22:30", "Lor", season);
     break;
     case 6:
         showLeagueTable(teams);
@@ -488,7 +488,7 @@ void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, 
   int i, currentKey;
   match *filteredMatches;
   int numOfHits = filterMatchesByDate(from, to, matches, &filteredMatches);
-  spectator *filteredAttendences = malloc(NUMOFTEAMS*sizeof(spectator));
+  spectator *filteredAttendences = calloc(NUMOFTEAMS, sizeof(spectator));
   if (filteredAttendences == NULL){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
@@ -558,7 +558,6 @@ int filterMatchesByDate(date from, date to, match *matches, match **filteredMatc
   for(i=0; i<numOfHits; i++){
     (*filteredMatches)[i] = matches[returnArray[i]];
   }
-  printAllMatches(*filteredMatches, numOfHits);
   free(returnArray);
   return numOfHits;
 }
