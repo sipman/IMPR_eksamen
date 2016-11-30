@@ -76,9 +76,9 @@ void findFirstRoundWithLesserGoals(int *resultRound, int *resultGoals, int goalD
 
 int main(void){
   FILE *input = fopen(SOURCEFILE, "r");
-  match *season = calloc(NUMOFTOTALMACHTES, sizeof(match));
-  round *rounds = calloc(NUMOFROUNDS, sizeof(rounds));
-  team  *teams  = calloc(NUMOFTEAMS, sizeof(team));
+  match *season = malloc(NUMOFTOTALMACHTES*sizeof(match));
+  round *rounds = malloc(NUMOFROUNDS*sizeof(rounds));
+  team  *teams  = malloc(NUMOFTEAMS*sizeof(team));
   int option;
   if(input == NULL){
     printf("File not found...\n");
@@ -113,7 +113,7 @@ int main(void){
  * @param      inputFile  The input file
  */
 void prepareData(match **matches, round **rounds, team **teams,  FILE *inputFile){
-  char *str = (char*) calloc(MAXLINELENGTH, sizeof(char));
+  char *str = (char*) malloc(MAXLINELENGTH*sizeof(char));
   int i=0;
   while (fgets(str, MAXLINELENGTH, inputFile)) {
     generateMatchFromStr(str, *rounds, *teams, &(*matches)[i]);
@@ -205,7 +205,7 @@ void clearBuffer(){
  */
 void showLeagueTable(team *teams){
   int i;
-  team *leagueTable = calloc(NUMOFTEAMS, sizeof(team));
+  team *leagueTable = malloc(NUMOFTEAMS*sizeof(team));
   copyTeamArray(leagueTable, teams);
   qsort(leagueTable, NUMOFTEAMS, sizeof(team), sortForLeagueTable);
   printf("-------------------------------------------------------\n");
@@ -465,7 +465,7 @@ int sortForLeagueTable(const void * a, const void * b){
  * @return     Pointer to the filtered array stored in the heap.
  */
 int findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, match **filteredMatches){
-  int *resultArray = calloc(NUMOFTOTALMACHTES, sizeof(int));
+  int *resultArray = malloc(NUMOFTOTALMACHTES*sizeof(int));
   int i, numOfHits=0;
   if (resultArray == NULL){
     printf("%s", "Not enough ram, sorry..");
@@ -477,7 +477,7 @@ int findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, m
       numOfHits++;
     }
   }
-  *filteredMatches = calloc(numOfHits, sizeof(match));
+  *filteredMatches = malloc(numOfHits*sizeof(match));
   for(i=0; i<numOfHits; i++){
     (*filteredMatches)[i] = matches[resultArray[i]];
   }
@@ -498,7 +498,7 @@ void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, 
   int i;
   match *filteredMatches;
   int numOfHits = filterMatchesByDate(from, to, matches, &filteredMatches);
-  spectator *filteredAttendences = calloc(NUMOFTEAMS, sizeof(spectator));
+  spectator *filteredAttendences = malloc(NUMOFTEAMS*sizeof(spectator));
   spectator *current;
   if (filteredAttendences == NULL){
     printf("%s", "Not enough ram, sorry..");
@@ -554,7 +554,7 @@ spectator *findSpectators(char *teamName, spectator *attendances){
  */
 int filterMatchesByDate(date from, date to, match *matches, match **filteredMatches){
   int i, numOfHits=0;
-  int *returnArray = (int*) calloc(NUMOFTOTALMACHTES, sizeof(int));
+  int *returnArray = (int*) malloc(NUMOFTOTALMACHTES*sizeof(int));
   if(returnArray == NULL){
     exit(EXIT_FAILURE);
   }
@@ -564,7 +564,7 @@ int filterMatchesByDate(date from, date to, match *matches, match **filteredMatc
           numOfHits++;
       }
   }
-  *filteredMatches = calloc(numOfHits,sizeof(match));
+  *filteredMatches = malloc(numOfHits*sizeof(match));
   for(i=0; i<numOfHits; i++){
     (*filteredMatches)[i] = matches[returnArray[i]];
   }
@@ -582,7 +582,7 @@ int filterMatchesByDate(date from, date to, match *matches, match **filteredMatc
  */
 int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
   int i, numOfHits=0;
-  int *resultArray = calloc(NUMOFTEAMS, sizeof(int));;
+  int *resultArray = malloc(NUMOFTEAMS*sizeof(int));;
   if (resultArray == NULL){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
@@ -593,7 +593,7 @@ int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
         numOfHits++;
     }
   }
-  *teamsDominatingAway = calloc(numOfHits, sizeof(team));
+  *teamsDominatingAway = malloc(numOfHits*sizeof(team));
   for(i=0; i<numOfHits; i++){
     (*teamsDominatingAway)[i] = teams[resultArray[i]];
   }
@@ -633,7 +633,7 @@ team *findTeam(char *teamName, team *teams){
  * @return     Returns the pointer to the resultArray containing all the hits.
  */
 int findDrawsSearch(int goalDelimiter, match *matches, match **draws){
-  int *returnArray = (int*) calloc(NUMOFTOTALMACHTES, sizeof(int));
+  int *returnArray = (int*) malloc(NUMOFTOTALMACHTES*sizeof(int));
   int i, numOfHits=0;
   if (returnArray == NULL){
     printf("%s", "Not enough ram, sorry..");
@@ -645,7 +645,7 @@ int findDrawsSearch(int goalDelimiter, match *matches, match **draws){
         numOfHits++;
     }
   }
-  *draws = (match*) calloc(numOfHits, sizeof(match));
+  *draws = (match*) malloc(numOfHits*sizeof(match));
   for(i=0; i<numOfHits; i++){
     (*draws)[i] = matches[returnArray[i]];
   }
