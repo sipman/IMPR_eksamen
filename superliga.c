@@ -612,7 +612,7 @@ int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
  * @return     A pointer to the correct placement of the teamName
  */
 int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams){
-  int i, nextTick=0;
+  /*int i, nextTick=0;
   for(i=0; i<*numOfGeneratedTeams; i++){
     if(strcmp(teams[i].name, teamName)==0){
       return i;
@@ -620,8 +620,8 @@ int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams){
     nextTick++;
   }
     *numOfGeneratedTeams +=1;
-    return nextTick;
-
+    return nextTick;*/
+  return 0;
 }
 
 /**
