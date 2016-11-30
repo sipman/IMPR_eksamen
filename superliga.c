@@ -421,6 +421,7 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGener
   /* Round stat generate */
   rounds[(destination->round-1)].round=destination->round;
   rounds[(destination->round-1)].goals+=destination->homeGoals+destination->awayGoals;
+  printAMatch(*destination);
 }
 /**
  * @brief      QSort compare function for showLeagueTable-function
