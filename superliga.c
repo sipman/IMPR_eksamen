@@ -77,14 +77,14 @@ int main(void){
     printf("File not found...\n");
     exit(EXIT_FAILURE);
   }
-  if (season == NULL || rounds == NULL || teams == NULL){
+  if (season == NULL || rounds == NULL){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
   }
   char *str = (char*) malloc(MAXLINELENGTH*sizeof(char));
   int i=0;
-  while (fgets(str, MAXLINELENGTH, inputFile)) {
-    generateMatchFromStr(str, *rounds, teams, numOfGeneratedTeams, &matches[i]);
+  while (fgets(str, MAXLINELENGTH, input)) {
+    generateMatchFromStr(str, rounds, teams, &numOfGeneratedTeams, &season[i]);
     i++;
   }
   free(str);
