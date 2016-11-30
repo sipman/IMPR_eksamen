@@ -82,10 +82,11 @@ int main(void){
   }
   prepareData(&season, &rounds, &teams, input);
   fclose(input);
-  welcomeMessage();
+  printAllMatches(season, NUMOFTOTALMACHTES);
+  /*welcomeMessage();
   helpMessage();
   option = scanOption();
-  runCommand(option, input, season, rounds, teams);
+  runCommand(option, input, season, rounds, teams);*/
   free(season);
   free(rounds);
   free(teams);
