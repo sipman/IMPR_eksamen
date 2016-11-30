@@ -66,7 +66,7 @@ int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams);
 int findDrawsSearch(int goalDelimiter, match *matches, match **draws);
 void findFirstRoundWithLesserGoals(int *resultRound, int *resultGoals, int goalDelimiter, round *rounds);
 
-int main(void){
+int main(int argc, char const *argv[]){
   FILE *input = fopen(SOURCEFILE, "r");
   match *season = malloc(NUMOFTOTALMACHTES*sizeof(match));
   round *rounds = calloc(NUMOFROUNDS,sizeof(rounds));
@@ -82,10 +82,14 @@ int main(void){
   }
   prepareData(&season, &rounds, teams, &numOfGeneratedTeams, input);
   fclose(input);
-  welcomeMessage();
-  helpMessage();
-  option = scanOption();
-  runCommand(option, input, season, rounds, teams);
+  if(argc > 1 && strcmp(argv[1], "--print")==0){
+      runCommand(-1, input, season, rounds, teams);
+  }else{
+    welcomeMessage();
+    helpMessage();
+    option = scanOption();
+    runCommand(option, input, season, rounds, teams);
+  }
   free(season);
   free(rounds);
   free(teams);
@@ -152,6 +156,15 @@ int scanOption(){
 int runCommand(int option, FILE *input, match *season, round *rounds, team *teams){
   int newOption, done=0;
   switch(option){
+    case -1:
+      showDrawMatches(4, season);
+      showARoundWithLesserGoals(10, rounds);
+      showTeamsDominatingAway(teams);
+      showTeamWithLowestAttendances("1/1/2015", "31/12/2015", season);
+      showMatchesFromAWeekDay("08:00", "22:30", "Lor", season);
+      showLeagueTable(teams);
+      done = 1;
+    break;
     case 0:
       helpMessage();
     break;
@@ -199,6 +212,7 @@ void showLeagueTable(team *teams){
   team *leagueTable = malloc(NUMOFTEAMS*sizeof(team));
   copyTeamArray(leagueTable, teams);
   qsort(leagueTable, NUMOFTEAMS, sizeof(team), sortForLeagueTable);
+  printf("\n------------------- 6: League Table -------------------\n");
   printf("-------------------------------------------------------\n");
   printf("| Pos | Hold | K  | V  | U  | T  | M+ | M- | MF  | P  |\n");
   for(i=0; i<NUMOFTEAMS; i++){
@@ -235,7 +249,10 @@ void showMatchesFromAWeekDay(char *from, char *to, char *weekday, match *matches
   sscanf(from, "%d:%d", &fromTimestamp.hours, &fromTimestamp.minutes);
   sscanf(to, "%d:%d", &toTimestamp.hours, &toTimestamp.minutes);
   numOfFilteredMatches = findMatchesFromAWeekDay(fromTimestamp, toTimestamp, weekday, matches, &filteredMatches);
+
+  printf("\n-------------------- 5: Show matches on Saturdays  --------------------\n");
   printAllMatches(filteredMatches, numOfFilteredMatches);
+  printf("----------------------------------------------------------------------\n\n");
   free(filteredMatches);
 }
 
@@ -262,7 +279,9 @@ void showTeamWithLowestAttendances(char *fromStr, char *toStr, match *matches){
           &to.year
         );
   findTeamWithLowestAttendances(teamname, &attendances, from, to, matches);
+  printf("\n------------- 4: Show team with fewest spectators in 2015  ------------\n");
   printf("Between %02d/%02d/%02d and %02d/%02d/%02d the team with the lowest attendances is %-3s with %d\n", from.day, from.month, from.year, to.day, to.month, to.year, teamname, attendances);
+  printf("----------------------------------------------------------------------\n\n");
 }
 
 /**
@@ -274,9 +293,11 @@ void showTeamsDominatingAway(team *teams){
   int numOfTeamsDominatingAway, i;
   team *teamsDominatingAway;
   numOfTeamsDominatingAway = findTeamsDominatingAway(teams, &teamsDominatingAway);
+  printf("\n---------------- 3: Show teams dominating away games  ----------------\n");
   for(i=0; i < numOfTeamsDominatingAway; i++){
     printf("%s with %d away wins against %d home wins\n", teamsDominatingAway[i].name, teamsDominatingAway[i].awayWins, teamsDominatingAway[i].homeWins);
   }
+  printf("----------------------------------------------------------------------\n\n");
   free(teamsDominatingAway);
 }
 
@@ -289,7 +310,9 @@ void showTeamsDominatingAway(team *teams){
 void showARoundWithLesserGoals(int goalDelimiter, round *rounds){
   int resultRound, resultGoals;
   findFirstRoundWithLesserGoals(&resultRound, &resultGoals, goalDelimiter, rounds);
+  printf("\n------------------- 2: Show round with goals < 10 -------------------\n");
   printf("Round: %2d\t Goals: %d\n", resultRound, resultGoals);
+  printf("----------------------------------------------------------------------\n\n");
 }
 
 /**
@@ -302,9 +325,11 @@ void showDrawMatches(int goalDelimiter, match *matches){
   int i;
   match *draws;
   int numOfDraws = findDrawsSearch(4, matches, &draws);
+  printf("\n------------------------- 1: Show Draws ----------------------------\n");
   for(i=0; i < numOfDraws; i++){
     printAMatch(draws[i]);
   }
+  printf("----------------------------------------------------------------------\n\n");
   free(draws);
 }
 
