@@ -418,8 +418,8 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGener
   teams[awayTeamKey].awayWins += (destination->awayGoals>destination->homeGoals);
   teams[awayTeamKey].points += (destination->awayGoals>destination->homeGoals) ? WINPOINTS : (destination->awayGoals==destination->homeGoals) ? DRAWPOINTS : LOOSEPOINTS;*/
   /* Round stat generate */
-  rounds[(destination->round-1)].round=destination->round;
-  rounds[(destination->round-1)].goals+=destination->homeGoals+destination->awayGoals;
+  /*rounds[(destination->round-1)].round=destination->round;
+  rounds[(destination->round-1)].goals+=destination->homeGoals+destination->awayGoals;*/
   /*printAMatch(*destination);*/
 }
 /**
