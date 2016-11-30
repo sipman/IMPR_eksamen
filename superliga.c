@@ -81,7 +81,14 @@ int main(void){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
   }
-  prepareData(&season, &rounds, teams, &numOfGeneratedTeams, input);
+  char *str = (char*) malloc(MAXLINELENGTH*sizeof(char));
+  int i=0;
+  while (fgets(str, MAXLINELENGTH, inputFile)) {
+    generateMatchFromStr(str, *rounds, teams, numOfGeneratedTeams, &matches[i]);
+    i++;
+  }
+  free(str);
+  /*prepareData(&season, &rounds, teams, &numOfGeneratedTeams, input);*/
   fclose(input);
   printAllMatches(season, NUMOFTOTALMACHTES);
   /*welcomeMessage();
