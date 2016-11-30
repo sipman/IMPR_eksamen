@@ -13,16 +13,16 @@
 #define DRAWPOINTS 1
 #define LOOSEPOINTS 0
 #define SOURCEFILE "superliga-2015-2016"
-typedef struct {
+typedef struct date{
   int day, month, year;
 } date;
-typedef struct {
+typedef struct time{
   int hours, minutes;
 } time;
-typedef struct {
+typedef struct round{
   int round, goals;
 } round;
-typedef struct {
+typedef struct team{
   char name[TEAMNAMEBUFFER];
   int totalMatches, totalWins, totalDraws, totalLoses, totalGoalsScored, totalGoalsConceded, awayWins, homeWins, points;
   /*int awayMatches, homeMatches,
@@ -34,11 +34,11 @@ typedef struct {
       awayGoalsConceded, homeGoalsConceded,
       points;*/
 } team;
-typedef struct {
+typedef struct spectator{
   char teamname[TEAMNAMEBUFFER];
   int attendances;
 } spectator;
-typedef struct {
+typedef struct match{
   round *round;
   char weekDay[WEEKDAYBUFFER];
   date date;
