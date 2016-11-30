@@ -72,7 +72,6 @@ int main(void){
   round *rounds = calloc(NUMOFROUNDS,sizeof(rounds));
   team  *teams = calloc(NUMOFTEAMS,sizeof(team));
   int option, numOfGeneratedTeams=0;
-
   if(input == NULL){
     printf("File not found...\n");
     exit(EXIT_FAILURE);
@@ -620,7 +619,7 @@ int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams){
  * @return     Returns the pointer to the resultArray containing all the hits.
  */
 int findDrawsSearch(int goalDelimiter, match *matches, match **draws){
-  int *returnArray = (int*) malloc(NUMOFTOTALMACHTES*sizeof(int));
+  int *returnArray = (int*) calloc(NUMOFTOTALMACHTES, sizeof(int));
   int i, numOfHits=0;
   if (returnArray == NULL){
     printf("%s", "Not enough ram, sorry..");
