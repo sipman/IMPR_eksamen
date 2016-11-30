@@ -409,6 +409,7 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGener
   teams[homeTeamKey].points += (destination->homeGoals>destination->awayGoals) ? WINPOINTS : (destination->homeGoals==destination->awayGoals) ? DRAWPOINTS : LOOSEPOINTS;*/
   /* Away team stat generate */
   awayTeamKey = findTeam(awayTeam, teams, numOfGeneratedTeams);
+  printf("%s\n", teams[awayTeamKey].name);
   destination->awayTeam =  awayTeamKey;
   teams[awayTeamKey].totalGoalsScored += destination->awayGoals;
   /*teams[awayTeamKey].totalMatches += 1;
