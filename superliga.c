@@ -616,7 +616,7 @@ int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams){
     if(strcmp(teams[i].name, teamName)==0)
       return i;
   }
-  printf("%s\n", teams[*numOfGeneratedTeams].name);
+  printf("%s\n", teamName);
   if(*numOfGeneratedTeams <= NUMOFTEAMS){
 
     strcpy(teams[*numOfGeneratedTeams].name, teamName);
