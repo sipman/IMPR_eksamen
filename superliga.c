@@ -39,7 +39,7 @@ typedef struct match{
   int homeGoals, awayGoals;
   int attendances;
 } match;
-void prepareData(match **matches, round **rounds, team **teams, FILE *inputFile);
+void prepareData(match **matches, round **rounds, team *teams, int *numOfGeneratedTeams, FILE *inputFile);
 void welcomeMessage();
 void helpMessage();
 int scanOption();
@@ -53,7 +53,7 @@ void showDrawMatches(int goalDelimiter, match *matches);
 void showARoundWithLesserGoals(int goalDelimiter, round *rounds);
 void printAMatch(match match);
 void printAllMatches(match *matches, int numberOfMatches);
-void generateMatchFromStr(char *str, round *rounds, team *teams, match *match);
+void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGeneratedTeams, match *match);
 int generateNumberOfRounds(int roundNumber, int currentRoundNumber);
 void copyTeamArray(team *dest, team *path);
 int findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, match **filteredMatches);
@@ -62,7 +62,7 @@ void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, 
 int findSpectators(char *teamName, spectator *attendances);
 int filterMatchesByDate(date from, date to, match *matches, match **filteredMatches);
 int findTeamsDominatingAway(team *teams, team **teamsDominatingAway);
-int findTeam(char *teamName, team *teams);
+int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams);
 int findDrawsSearch(int goalDelimiter, match *matches, match **draws);
 void findFirstRoundWithLesserGoals(int *resultRound, int *resultGoals, int goalDelimiter, round *rounds);
 
@@ -70,8 +70,9 @@ int main(void){
   FILE *input = fopen(SOURCEFILE, "r");
   match *season = malloc(NUMOFTOTALMACHTES*sizeof(match));
   round *rounds = malloc(NUMOFROUNDS*sizeof(rounds));
-  team  *teams  = malloc(NUMOFTEAMS*sizeof(team));
-  int option;
+  team  *teams = malloc(NUMOFTEAMS*sizeof(team));
+  int option, numOfGeneratedTeams;
+
   if(input == NULL){
     printf("File not found...\n");
     exit(EXIT_FAILURE);
@@ -80,10 +81,10 @@ int main(void){
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
   }
-  prepareData(&season, &rounds, &teams, input);
+  prepareData(&season, &rounds, teams, &numOfGeneratedTeams, input);
   fclose(input);
-  /*printAllMatches(season, NUMOFTOTALMACHTES);
-  welcomeMessage();
+  printAllMatches(season, NUMOFTOTALMACHTES);
+  /*welcomeMessage();
   helpMessage();
   option = scanOption();
   runCommand(option, input, season, rounds, teams);*/
@@ -105,11 +106,11 @@ int main(void){
  * @param      teams      The array of teams
  * @param      inputFile  The input file
  */
-void prepareData(match **matches, round **rounds, team **teams,  FILE *inputFile){
+void prepareData(match **matches, round **rounds, team *teams, int *numOfGeneratedTeams,  FILE *inputFile){
   char *str = (char*) malloc(MAXLINELENGTH*sizeof(char));
   int i=0;
   while (fgets(str, MAXLINELENGTH, inputFile)) {
-    generateMatchFromStr(str, *rounds, *teams, &(*matches)[i]);
+    generateMatchFromStr(str, *rounds, teams, numOfGeneratedTeams, &(*matches)[i]);
     i++;
   }
   free(str);
@@ -371,7 +372,7 @@ void copyTeamArray(team *dest, team *path){
  *
  * @return     { description_of_the_return_value }
  */
-void generateMatchFromStr(char *str, round *rounds, team *teams, match *destination){
+void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGeneratedTeams, match *destination){
   double attendances = 0;
   int homeTeamKey, awayTeamKey;
   char homeTeam[TEAMNAMEBUFFER], awayTeam[TEAMNAMEBUFFER];
@@ -392,7 +393,7 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, match *destinat
 
   destination->attendances = (attendances*1000);
   /* Home team stat generate */
-  homeTeamKey = findTeam(homeTeam, teams);
+  homeTeamKey = findTeam(homeTeam, teams, numOfGeneratedTeams);
   destination->homeTeam = homeTeamKey;
   strcpy(teams[homeTeamKey].name, homeTeam);
   teams[homeTeamKey].totalMatches += 1;
@@ -404,7 +405,7 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, match *destinat
   teams[homeTeamKey].homeWins += (destination->homeGoals>destination->awayGoals);
   teams[homeTeamKey].points += (destination->homeGoals>destination->awayGoals) ? WINPOINTS : (destination->homeGoals==destination->awayGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Away team stat generate */
-  awayTeamKey = findTeam(awayTeam, teams);
+  awayTeamKey = findTeam(awayTeam, teams, numOfGeneratedTeams);
   destination->awayTeam =  awayTeamKey;
   strcpy(teams[awayTeamKey].name, awayTeam);
   teams[awayTeamKey].totalMatches += 1;
@@ -603,19 +604,15 @@ int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
  *
  * @return     A pointer to the correct placement of the teamName
  */
-int findTeam(char *teamName, team *teams){
-  int i=0, found=0, nextTick=-1;
-  while(!found && i < NUMOFTEAMS){
-      printf("%s == %s = %d\n", teamName, teams[i].name, strcmp(teams[i].name, teamName));
-    if(!strcmp(teams[i].name, teamName)){
-        found = 1;
-        return i;
-    }else if(nextTick == -1 && strlen(teams[i].name) == 0){
-        nextTick = i;
-    }
-    i++;
+int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams){
+  int i;
+  for(i=0; i<*numOfGeneratedTeams; i++){
+    if(strcmp(teams[i].name, teamName)==0)
+      return i;
   }
-    return nextTick;
+    strcpy(teams[i+1].name, teamName);
+    *numOfGeneratedTeams += 1;
+    return i+1;
 }
 
 /**
