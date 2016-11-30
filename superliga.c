@@ -618,7 +618,7 @@ int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams){
     }
     nextTick++;
   }
-    printf("%d", nextTick);
+    printf("TeamName: %s, NextTick: %d", teamName, nextTick);
     strcpy(teams[nextTick].name, teamName);
     *numOfGeneratedTeams +=1;
     return nextTick;
