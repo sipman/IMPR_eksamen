@@ -611,17 +611,17 @@ int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
  * @return     A pointer to the correct placement of the teamName
  */
 int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams){
-  int i;
-  team newTeam = {"",0,0,0,0,0,0,0};
+  int i, nextTick=0;
   for(i=0; i<*numOfGeneratedTeams; i++){
-    if(strcmp(teams[i].name, teamName)==0)
+    if(strcmp(teams[i].name, teamName)==0){
       return i;
+    }
+    nextTick++;
   }
-    printf("%d\n", *numOfGeneratedTeams);
-    strcpy(newTeam.name, teamName);
-    teams[*numOfGeneratedTeams] = newTeam;
-    *numOfGeneratedTeams += 1;
-    return (*numOfGeneratedTeams-1);
+    printf("%d", *numOfGeneratedTeams);
+    strcpy(teams[*numOfGeneratedTeams].name, teamName);
+    *numOfGeneratedTeams +=1;
+    return (*numOfGeneratedTeams)-1;
 
 }
 
