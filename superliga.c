@@ -31,7 +31,7 @@ typedef struct spectator{
   int attendances;
 } spectator;
 typedef struct match{
-  round *round;
+  int round;
   char weekDay[WEEKDAYBUFFER];
   date date;
   time time;
@@ -317,7 +317,7 @@ void showDrawMatches(int goalDelimiter, match *matches){
  */
 void printAMatch(match match){
   printf("R%-2d\t%s\t%02d/%02d/%d\t%02d:%02d\t%-3s - %-3s\t%d-%d\t%d\n",
-        match.round->round,
+        match.round,
         match.weekDay,
         match.date.day,
         match.date.month,
@@ -373,10 +373,10 @@ void copyTeamArray(team *dest, team *path){
  */
 void generateMatchFromStr(char *str, round *rounds, team *teams, match *destination){
   double attendances = 0;
-  int round, homeTeamKey, awayTeamKey;
+  int homeTeamKey, awayTeamKey;
   char homeTeam[TEAMNAMEBUFFER], awayTeam[TEAMNAMEBUFFER];
   sscanf(str, " R%02d %s %d/%d/%d %d.%d %s - %s %d - %d %lf",
-        &round,
+        &destination->round,
         destination->weekDay,
         &destination->date.day,
         &destination->date.month,
@@ -416,9 +416,8 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, match *destinat
   teams[awayTeamKey].awayWins += (destination->awayGoals>destination->homeGoals);
   teams[awayTeamKey].points += (destination->awayGoals>destination->homeGoals) ? WINPOINTS : (destination->awayGoals==destination->homeGoals) ? DRAWPOINTS : LOOSEPOINTS;
   /* Round stat generate */
-  destination->round = &rounds[(round-1)];
-  destination->round->round = round;
-  destination->round->goals += destination->homeGoals+destination->awayGoals;
+  rounds[(destination->round-1)].round=destination->round;
+  rounds[(destination->round-1)].goals+=destination->homeGoals+destination->awayGoals;
 }
 /**
  * @brief      QSort compare function for showLeagueTable-function
