@@ -69,7 +69,7 @@ void findFirstRoundWithLesserGoals(int *resultRound, int *resultGoals, int goalD
 int main(void){
   FILE *input = fopen(SOURCEFILE, "r");
   match *season = malloc(NUMOFTOTALMACHTES*sizeof(match));
-  round *rounds = malloc(NUMOFROUNDS*sizeof(rounds));
+  round *rounds = calloc(NUMOFROUNDS,sizeof(rounds));
   team  *teams = calloc(NUMOFTEAMS,sizeof(team));
   int option, numOfGeneratedTeams=0;
 
@@ -651,7 +651,6 @@ int findDrawsSearch(int goalDelimiter, match *matches, match **draws){
 void findFirstRoundWithLesserGoals(int *resultRound, int *resultGoals, int goalDelimiter, round *rounds){
   int i;
   for(i=0; i<NUMOFROUNDS; i++){
-      printf("%d: %d\n", rounds[i].round, rounds[i].goals);
       if(rounds[i].goals < goalDelimiter){
         *resultRound = rounds[i].round;
         *resultGoals = rounds[i].goals;
