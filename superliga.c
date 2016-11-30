@@ -35,7 +35,7 @@ typedef struct match{
   char weekDay[WEEKDAYBUFFER];
   date date;
   time time;
-  team *homeTeam, *awayTeam;
+  int homeTeam, awayTeam;
   int homeGoals, awayGoals;
   int attendances;
 } match;
@@ -316,7 +316,7 @@ void showDrawMatches(int goalDelimiter, match *matches){
  * @param[in]  match  The match that is desired printed
  */
 void printAMatch(match match){
-  printf("R%-2d\t%s\t%02d/%02d/%d\t%02d:%02d\t%-3s - %-3s\t%d-%d\t%d\n",
+  printf("R%-2d\t%s\t%02d/%02d/%d\t%02d:%02d\t%-3d - %-3d\t%d-%d\t%d\n",
         match.round,
         match.weekDay,
         match.date.day,
@@ -324,8 +324,8 @@ void printAMatch(match match){
         match.date.year,
         match.time.hours,
         match.time.minutes,
-        match.homeTeam->name,
-        match.awayTeam->name,
+        match.homeTeam,
+        match.awayTeam,
         match.homeGoals,
         match.awayGoals,
         match.attendances
@@ -393,8 +393,8 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, match *destinat
   destination->attendances = (attendances*1000);
   /* Home team stat generate */
   homeTeamKey = findTeam(homeTeam, teams);
-  destination->homeTeam = &teams[homeTeamKey];
-  strcpy(teams[homeTeamKey].name, homeTeam);
+  destination->homeTeam = homeTeamKey;
+  /*strcpy(teams[homeTeamKey].name, homeTeam);
   teams[homeTeamKey].totalMatches += 1;
   teams[homeTeamKey].totalGoalsScored += destination->homeGoals;
   teams[homeTeamKey].totalGoalsConceded += destination->awayGoals;
@@ -402,11 +402,11 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, match *destinat
   teams[homeTeamKey].totalDraws += (destination->homeGoals==destination->awayGoals);
   teams[homeTeamKey].totalLoses += (destination->homeGoals<destination->awayGoals);
   teams[homeTeamKey].homeWins += (destination->homeGoals>destination->awayGoals);
-  teams[homeTeamKey].points += (destination->homeGoals>destination->awayGoals) ? WINPOINTS : (destination->homeGoals==destination->awayGoals) ? DRAWPOINTS : LOOSEPOINTS;
+  teams[homeTeamKey].points += (destination->homeGoals>destination->awayGoals) ? WINPOINTS : (destination->homeGoals==destination->awayGoals) ? DRAWPOINTS : LOOSEPOINTS;*/
   /* Away team stat generate */
   awayTeamKey = findTeam(awayTeam, teams);
-  destination->awayTeam =  &teams[awayTeamKey];
-  strcpy(teams[awayTeamKey].name, awayTeam);
+  destination->awayTeam =  awayTeamKey;
+  /*strcpy(teams[awayTeamKey].name, awayTeam);
   teams[awayTeamKey].totalMatches += 1;
   teams[awayTeamKey].totalGoalsScored += destination->awayGoals;
   teams[awayTeamKey].totalGoalsConceded += destination->homeGoals;
@@ -414,7 +414,7 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, match *destinat
   teams[awayTeamKey].totalDraws += (destination->awayGoals==destination->homeGoals);
   teams[awayTeamKey].totalLoses += (destination->awayGoals<destination->homeGoals);
   teams[awayTeamKey].awayWins += (destination->awayGoals>destination->homeGoals);
-  teams[awayTeamKey].points += (destination->awayGoals>destination->homeGoals) ? WINPOINTS : (destination->awayGoals==destination->homeGoals) ? DRAWPOINTS : LOOSEPOINTS;
+  teams[awayTeamKey].points += (destination->awayGoals>destination->homeGoals) ? WINPOINTS : (destination->awayGoals==destination->homeGoals) ? DRAWPOINTS : LOOSEPOINTS;*/
   /* Round stat generate */
   rounds[(destination->round-1)].round=destination->round;
   rounds[(destination->round-1)].goals+=destination->homeGoals+destination->awayGoals;
@@ -497,7 +497,7 @@ void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, 
     printf("%s", "Not enough ram, sorry..");
     exit(EXIT_FAILURE);
   }
-  for(i=0; i<numOfHits; i++){
+  /*for(i=0; i<numOfHits; i++){
       currentKey = findSpectators(filteredMatches[i].homeTeam->name, filteredAttendences);
       strcpy(filteredAttendences[currentKey].teamname, filteredMatches[i].homeTeam->name);
       filteredAttendences[currentKey].attendances += filteredMatches[i].attendances;
@@ -507,7 +507,7 @@ void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, 
           *attendances = filteredAttendences[i].attendances;
           strcpy(teamname, filteredAttendences[i].teamname);
       }
-  }
+  }*/
   free(filteredAttendences);
   free(filteredMatches);
 }
