@@ -1,3 +1,25 @@
+/**
+Author:  Morten Hartvigsen
+Email:   mhartv16@student.aau.dk
+Group:   B2-28A
+Study:   Software
+Development time: 28 hours
+
+Notes:
+    * The task #2 only searches for one instance, this is due to the wording in the task
+      seemed very specific and i interpreted it that way. If it should be able to find
+      one or more instances i would solve it like i solved task #1.
+
+Known issues:
+    * The program only runs when compiled on GCC 6.10
+    * There is known issues when running the program on 32-bit windows
+    * The program dosen't run if the sourcefile has a .txt extension - it has to be without extension
+    * The program dosen't return correct feedback if a function cant find what it is looking for.
+
+Success cases:
+    * Compiling with gcc 6.10 on MacOS Sierra 10.12
+    * compiling with gcc 6.10 on Windows 10 64-bit
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -96,10 +118,6 @@ int main(int argc, char const *argv[]){
   return 0;
 }
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * * * * * * * * * * * DATA FUNCTIONS  * * * * * * * * * * * * * * * * *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
 /**
  * @brief      Parses data from file to the array of match struct
  *
@@ -117,9 +135,6 @@ void prepareData(match **matches, round **rounds, team *teams, int *numOfGenerat
   }
 }
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * * * * * * * * * * OUTPUT FUNCTIONS  * * * * * * * * * * * * * * * * *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /**
  * @brief      welcomes the user and shows help message
  */
@@ -141,6 +156,11 @@ void helpMessage(){
   printf("  [6] => %-40s  [%-s]\n", "Show league table", "Shows the league table");
   printf("  [7] => %-40s  [%-s]\n", "Exit", "Closes the program");
 }
+/**
+ * @brief      Prompt user for an command option
+ *
+ * @return     the options
+ */
 int scanOption(){
   int option, res;
   printf("Please select an command (type 0 for help): ");
@@ -153,6 +173,17 @@ int scanOption(){
   }
   return option;
 }
+/**
+ * @brief      Actually runs the commands
+ *
+ * @param[in]  option  The option
+ * @param      input   The input
+ * @param      season  The season
+ * @param      rounds  The rounds
+ * @param      teams   The teams
+ *
+ * @return     returns 0 to keep it form endning in a inf-loop
+ */
 int runCommand(int option, FILE *input, match *season, round *rounds, team *teams){
   int newOption, done=0;
   switch(option){
@@ -161,7 +192,7 @@ int runCommand(int option, FILE *input, match *season, round *rounds, team *team
       showARoundWithLesserGoals(10, rounds);
       showTeamsDominatingAway(teams);
       showTeamWithLowestAttendances("1/1/2015", "31/12/2015", season);
-      showMatchesFromAWeekDay("08:00", "22:30", "Lor", season);
+      showMatchesFromAWeekDay("13:15", "14:15", "Son", season);
       showLeagueTable(teams);
       done = 1;
     break;
@@ -192,10 +223,14 @@ int runCommand(int option, FILE *input, match *season, round *rounds, team *team
   }
   if(!done){
     newOption = scanOption();
-    runCommand(newOption, input, season, rounds, teams);
+    return runCommand(newOption, input, season, rounds, teams);
   }
   return 0;
 }
+
+/**
+ * @brief      Clears the buffer so that the recursive scan isnt a inf-loop
+ */
 void clearBuffer(){
   int c;
   while((c = getchar()) != EOF)
@@ -250,7 +285,7 @@ void showMatchesFromAWeekDay(char *from, char *to, char *weekday, match *matches
   sscanf(to, "%d:%d", &toTimestamp.hours, &toTimestamp.minutes);
   numOfFilteredMatches = findMatchesFromAWeekDay(fromTimestamp, toTimestamp, weekday, matches, &filteredMatches);
 
-  printf("\n-------------------- 5: Show matches on Saturdays  --------------------\n");
+  printf("\n-------------------- 5: Show matches on Sundays  --------------------\n");
   printAllMatches(filteredMatches, numOfFilteredMatches);
   printf("----------------------------------------------------------------------\n\n");
   free(filteredMatches);
@@ -368,9 +403,6 @@ void printAllMatches(match *matches, int numberOfMatches){
   }
 }
 
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * * * * * * * * * * HELPER FUNCTIONS  * * * * * * * * * * * * * * * * *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 /**
  * @brief      copies one team struct array over in another
  *
@@ -388,11 +420,11 @@ void copyTeamArray(team *dest, team *path){
  * @brief      Takes a string and parse it to a match struct
  *               - also it generates the accordently rounds array with total goals
  *
- * @param      str     The string
- * @param      *rounds The array of rounds.
- * @param      *teams  The array of teams
- *
- * @return     { description_of_the_return_value }
+ * @param      str                  The string
+ * @param      rounds               The rounds
+ * @param      teams                The teams
+ * @param      numOfGeneratedTeams  The number of generated teams
+ * @param      destination          The destination
  */
 void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGeneratedTeams, match *destination){
   double attendances = 0;
@@ -437,8 +469,8 @@ void generateMatchFromStr(char *str, round *rounds, team *teams, int *numOfGener
   roundsKey = (destination->round)-1;
   rounds[roundsKey].round = destination->round;
   rounds[roundsKey].goals += destination->homeGoals+destination->awayGoals;
-  /*printAMatch(*destination);*/
 }
+
 /**
  * @brief      QSort compare function for showLeagueTable-function
  */
@@ -470,13 +502,13 @@ int sortForLeagueTable(const void * a, const void * b){
  * @brief      Finds and returns the array of matches that is played
  *             on the given weekday and from & to timestamp
  *
- * @param[in]  from                  The from timestamp
- * @param[in]  to                    The to timestamp
- * @param      weekday               The weekday string
- * @param      matches               The matches array
- * @param      numOfFilteredMatches  The number of filtered matches
+ * @param[in]  from             The from timestamp
+ * @param[in]  to               The to timestamp
+ * @param      weekday          The weekday string
+ * @param      matches          The matches array
+ * @param      filteredMatches  The filtered matches
  *
- * @return     Pointer to the filtered array stored in the heap.
+ * @return     The size of the array
  */
 int findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, match **filteredMatches){
   int *resultArray = malloc(NUMOFTOTALMACHTES*sizeof(int));
@@ -486,7 +518,7 @@ int findMatchesFromAWeekDay(time from, time to, char *weekday, match *matches, m
     exit(EXIT_FAILURE);
   }
   for(i=0; i < NUMOFTOTALMACHTES; i++){
-    if(!strcmp(matches[i].weekDay,weekday) && matches[i].time.hours >= from.hours && matches[i].time.minutes >= from.minutes && matches[i].time.hours <= to.hours && matches[i].time.minutes <= to.minutes){
+    if(strcmp(matches[i].weekDay,weekday)==0 && matches[i].time.hours >= from.hours && matches[i].time.hours <= to.hours && ((matches[i].time.hours*60)+matches[i].time.minutes) >= ((from.hours*60)+from.minutes) && ((matches[i].time.hours*60)+matches[i].time.minutes) <= ((to.hours*60)+to.minutes)){
       resultArray[numOfHits] = i;
       numOfHits++;
     }
@@ -534,13 +566,12 @@ void findTeamWithLowestAttendances(char *teamname, int *attendances, date from, 
 }
 
 /**
- * @brief      Find the corosponding pointer in the attendances array,
- *             if not present returns the pointer to the next space in the array
+ * @brief      Find the corosponding index key to the teamname in the spectator array
  *
  * @param      teamName     The team name
  * @param      attendances  The attendances
  *
- * @return     A pointer to the correct placement of the teamName
+ * @return     The index key
  */
 int findSpectators(char *teamName, spectator *attendances){
   int i=0, found=0, nextTick=-1;
@@ -559,12 +590,12 @@ int findSpectators(char *teamName, spectator *attendances){
 /**
  * @brief      filter an array of mathces by date.
  *
- * @param[in]  from       The from date
- * @param[in]  to         The to date
- * @param      matches    The matches
- * @param      resultNum  The result number
+ * @param[in]  from             The from
+ * @param[in]  to               The to date
+ * @param      matches          The matches
+ * @param      filteredMatches  The filtered matches
  *
- * @return     Pointer to the filtered array in the heap
+ * @return     The size of the array
  */
 int filterMatchesByDate(date from, date to, match *matches, match **filteredMatches){
   int i, numOfHits=0;
@@ -589,10 +620,10 @@ int filterMatchesByDate(date from, date to, match *matches, match **filteredMatc
 /**
  * @brief      Finds an array of the teams who dominated away games
  *
- * @param[in]      teams                     The teams
- * @param          numOfTeamsDominatingAway  The number of teams dominating away
+ * @param      teams                The teams
+ * @param      teamsDominatingAway  The teams dominating away
  *
- * @return     A pointer to the array of the teams who wins more away than home games
+ * @return     The size of the array
  */
 int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
   int i, numOfHits=0;
@@ -616,13 +647,13 @@ int findTeamsDominatingAway(team *teams, team **teamsDominatingAway){
 }
 
 /**
- * @brief      Find the corosponding pointer in the team array,
- *             if not present returns the pointer to the next space in the array
+ * @brief      Find the corosponding index key for a teamName in the team array.
  *
- * @param      teamName  The team name
- * @param      teams     The array of teams
+ * @param      teamName             The team name
+ * @param      teams                The teams
+ * @param      numOfGeneratedTeams  The number of generated teams
  *
- * @return     A pointer to the correct placement of the teamName
+ * @return     The index key
  */
 int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams){
   int i, nextTick=*numOfGeneratedTeams;
@@ -636,12 +667,13 @@ int findTeam(char *teamName, team *teams, int *numOfGeneratedTeams){
 }
 
 /**
- * @brief      Takes an array of matches, searches for draws with the delimiter of total goals and returns an array pointer
+ * @brief      Takes an array of matches, searches for draws with the delimiter of total goals.
  *
- * @param[in]  goalDelimiter   The goal delimiter
- * @param[in]  *matches        The array matches
+ * @param[in]  goalDelimiter  The goal delimiter
+ * @param      matches        The matches
+ * @param      draws          The draws
  *
- * @return     Returns the pointer to the resultArray containing all the hits.
+ * @return     The arry size of draws
  */
 int findDrawsSearch(int goalDelimiter, match *matches, match **draws){
   int *returnArray = (int*) calloc(NUMOFTOTALMACHTES, sizeof(int));
